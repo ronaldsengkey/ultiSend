@@ -1,0 +1,516 @@
+---
+swagger: "2.0"
+info:
+  description: "Ulti send is provide service"
+  version: "0.0.1"
+  title: "Ulti Send"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "apiteam@swagger.io"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "petstore.swagger.io"
+basePath: "/ultiSend"
+tags:
+  - name: "api"
+    description: "Permissions request for all access"
+  - name: "source"
+    description: "Source path"
+schemes:
+  - "https"
+  - "http"
+paths:
+  /api/rate:
+    get:
+      tags:
+        - "api"
+      summary: "source request"
+      description: "Global source access"
+      operationId: "landingSource"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "service"
+          in: "query"
+          description: "service category (same day, Priority)"
+          required: true
+          type: "string"
+          items:
+            type: "string"
+            default: "sameDay"
+            enum:
+              - "sameDay"
+              - "priority"
+          collectionFormat: "multi"
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Pet"
+        "400":
+          description: "Invalid status value"
+      security:
+        - petstore_auth:
+            - "write:pets"
+            - "read:pets"
+      x-swagger-router-controller: "api"
+
+  /api/order:
+    get:
+      tags:
+        - "api"
+      summary: "get order request"
+      description: "Order request from others app"
+      operationId: "getOrder"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "service"
+          in: "query"
+          description: "service category (same day, Priority)"
+          required: true
+          type: "string"
+          items:
+            type: "string"
+            default: "all"
+            enum:
+              - "sameDay"
+              - "priority"
+              - "all"
+          collectionFormat: "multi"
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"
+
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Pet"
+        "400":
+          description: "Invalid status value"
+      security:
+        - petstore_auth:
+            - "write:pets"
+            - "read:pets"
+      x-swagger-router-controller: "api"
+
+    post:
+      tags:
+        - "api"
+      summary: "order request"
+      description: "Order request from"
+      operationId: "postOrder"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "service"
+          in: "query"
+          description: "service category (same day, Priority)"
+          required: true
+          type: "string"
+          items:
+            type: "string"
+            default: "sameDay"
+            enum:
+              - "sameDay"
+              - "priority"
+          collectionFormat: "multi"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/orderInquiry"
+
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Pet"
+        "400":
+          description: "Invalid status value"
+      security:
+        - petstore_auth:
+            - "write:pets"
+            - "read:pets"
+      x-swagger-router-controller: "api"
+
+  /api/order/assign:
+    update:
+      tags:
+        - "api"
+      summary: "order request"
+      description: "Order request from"
+      operationId: "assignOrderUpdate"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/assignOrderUpdateInquiry"
+
+    post:
+      tags:
+        - "api"
+      summary: "order request"
+      description: "Order request from"
+      operationId: "assignOrderPost"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/assignOrderInquiry"
+
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Pet"
+        "400":
+          description: "Invalid status value"
+      security:
+        - petstore_auth:
+            - "write:pets"
+            - "read:pets"
+      x-swagger-router-controller: "api"
+
+  /source:
+    get:
+      tags:
+        - "source"
+      summary: "signin request"
+      description: "Global signin for all access"
+      operationId: "signinForm"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "v"
+          in: "query"
+          description: "destiny app"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "continue"
+          in: "query"
+          description: "destiny app"
+          required: false
+          type: "string"
+          # items:
+          #   type: "string"
+          #   default: "permissions"
+          #   enum:
+          #     - "permissions"
+          #     - "dashboard"
+          # collectionFormat: "multi"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Pet"
+        "400":
+          description: "Invalid status value"
+      # security:
+      # - petstore_auth:
+      #     - "write:pets"
+      #     - "read:pets"
+      x-swagger-router-controller: "source"
+
+securityDefinitions:
+  petstore_auth:
+    type: "oauth2"
+    authorizationUrl: "http://petstore.swagger.io/oauth/dialog"
+    flow: "implicit"
+    scopes:
+      write:pets: "modify pets in your account"
+      read:pets: "read your pets"
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+
+definitions:
+  assignOrderUpdateInquiry:
+    type: "object"
+    properties:
+      orderId:
+        type: "string"
+      driverId:
+        type: "string"
+      responseDate:
+        type: "string"
+      responseTime:
+        type: "string"
+      responseNotes:
+        type: "string"
+      image:
+        type: "string"
+
+  assignOrderInquiry:
+    type: "object"
+    properties:
+      orderId:
+        type: "string"
+      driverId:
+        type: "string"
+      date:
+        type: "string"
+      time:
+        type: "string"
+      orderNotes:
+        type: "string"
+
+  orderInquiry:
+    type: "object"
+    properties:
+      orderId:
+        type: "string"
+      merchantName:
+        type: "string"
+      merchantAddress:
+        type: "string"
+      merchantPhone:
+        type: "string"
+      receiverName:
+        type: "string"
+      receiverAddress:
+        type: "string"
+      receiverPhone:
+        type: "string"
+
+  Order:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      petId:
+        type: "integer"
+        format: "int64"
+      quantity:
+        type: "integer"
+        format: "int32"
+      shipDate:
+        type: "string"
+        format: "date-time"
+      status:
+        type: "string"
+        description: "Order Status"
+        enum:
+          - "placed"
+          - "approved"
+          - "delivered"
+      complete:
+        type: "boolean"
+        default: false
+    xml:
+      name: "Order"
+    example:
+      petId: 6
+      quantity: 1
+      id: 0
+      shipDate: "2000-01-23T04:56:07.000+00:00"
+      complete: false
+      status: "placed"
+  Category:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+    xml:
+      name: "Category"
+    example:
+      name: "name"
+      id: 6
+  User:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      username:
+        type: "string"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+      phone:
+        type: "string"
+      userStatus:
+        type: "integer"
+        format: "int32"
+        description: "User Status"
+    xml:
+      name: "User"
+    example:
+      firstName: "firstName"
+      lastName: "lastName"
+      password: "password"
+      userStatus: 6
+      phone: "phone"
+      id: 0
+      email: "email"
+      username: "username"
+  Tag:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+    xml:
+      name: "Tag"
+    example:
+      name: "name"
+      id: 1
+  Pet:
+    type: "object"
+    required:
+      - "name"
+      - "photoUrls"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      category:
+        $ref: "#/definitions/Category"
+      name:
+        type: "string"
+        example: "doggie"
+      photoUrls:
+        type: "array"
+        xml:
+          name: "photoUrl"
+          wrapped: true
+        items:
+          type: "string"
+      tags:
+        type: "array"
+        xml:
+          name: "tag"
+          wrapped: true
+        items:
+          $ref: "#/definitions/Tag"
+      status:
+        type: "string"
+        description: "pet status in the store"
+        enum:
+          - "available"
+          - "pending"
+          - "sold"
+    xml:
+      name: "Pet"
+    example:
+      photoUrls:
+        - "photoUrls"
+        - "photoUrls"
+      name: "doggie"
+      id: 0
+      category:
+        name: "name"
+        id: 6
+      tags:
+        - name: "name"
+          id: 1
+        - name: "name"
+          id: 1
+      status: "available"
+  ApiResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
+    example:
+      code: 0
+      type: "type"
+      message: "message"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
