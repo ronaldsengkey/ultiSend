@@ -397,7 +397,7 @@ paths:
           collectionFormat: "multi"
         - name: "accountId"
           in: "query"
-          description: "id of account"
+          description: "version api"
           required: false
           type: "integer"
           minimum: 1
@@ -649,151 +649,6 @@ definitions:
       receiverPhone:
         type: "string"
 
-  Order:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int64"
-      petId:
-        type: "integer"
-        format: "int64"
-      quantity:
-        type: "integer"
-        format: "int32"
-      shipDate:
-        type: "string"
-        format: "date-time"
-      status:
-        type: "string"
-        description: "Order Status"
-        enum:
-          - "placed"
-          - "approved"
-          - "delivered"
-      complete:
-        type: "boolean"
-        default: false
-    xml:
-      name: "Order"
-    example:
-      petId: 6
-      quantity: 1
-      id: 0
-      shipDate: "2000-01-23T04:56:07.000+00:00"
-      complete: false
-      status: "placed"
-  Category:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int64"
-      name:
-        type: "string"
-    xml:
-      name: "Category"
-    example:
-      name: "name"
-      id: 6
-  User:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int64"
-      username:
-        type: "string"
-      firstName:
-        type: "string"
-      lastName:
-        type: "string"
-      email:
-        type: "string"
-      password:
-        type: "string"
-      phone:
-        type: "string"
-      userStatus:
-        type: "integer"
-        format: "int32"
-        description: "User Status"
-    xml:
-      name: "User"
-    example:
-      firstName: "firstName"
-      lastName: "lastName"
-      password: "password"
-      userStatus: 6
-      phone: "phone"
-      id: 0
-      email: "email"
-      username: "username"
-  Tag:
-    type: "object"
-    properties:
-      id:
-        type: "integer"
-        format: "int64"
-      name:
-        type: "string"
-    xml:
-      name: "Tag"
-    example:
-      name: "name"
-      id: 1
-  Pet:
-    type: "object"
-    required:
-      - "name"
-      - "photoUrls"
-    properties:
-      id:
-        type: "integer"
-        format: "int64"
-      category:
-        $ref: "#/definitions/Category"
-      name:
-        type: "string"
-        example: "doggie"
-      photoUrls:
-        type: "array"
-        xml:
-          name: "photoUrl"
-          wrapped: true
-        items:
-          type: "string"
-      tags:
-        type: "array"
-        xml:
-          name: "tag"
-          wrapped: true
-        items:
-          $ref: "#/definitions/Tag"
-      status:
-        type: "string"
-        description: "pet status in the store"
-        enum:
-          - "available"
-          - "pending"
-          - "sold"
-    xml:
-      name: "Pet"
-    example:
-      photoUrls:
-        - "photoUrls"
-        - "photoUrls"
-      name: "doggie"
-      id: 0
-      category:
-        name: "name"
-        id: 6
-      tags:
-        - name: "name"
-          id: 1
-        - name: "name"
-          id: 1
-      status: "available"
   ApiResponse:
     type: "object"
     properties:
@@ -806,7 +661,7 @@ definitions:
         type: "string"
     example:
       code: 0
-      type: "type"
+      type: "application/json"
       message: "message"
 externalDocs:
   description: "Find out more about Swagger"
