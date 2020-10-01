@@ -6,7 +6,7 @@ info:
   title: "Ulti Send"
   termsOfService: "http://swagger.io/terms/"
   contact:
-    email: "apiteam@swagger.io"
+    email: "ronaldsengkey@usahakreatif.co.id"
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -58,17 +58,38 @@ paths:
           type: "string"
       responses:
         "200":
-          description: "successful operation"
+          description: "Account post response"
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Pet"
-        "400":
-          description: "Invalid status value"
-      security:
-        - petstore_auth:
-            - "write:pets"
-            - "read:pets"
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
       x-swagger-router-controller: "api"
 
   /api/order:
@@ -110,17 +131,38 @@ paths:
 
       responses:
         "200":
-          description: "successful operation"
+          description: "Account post response"
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Pet"
-        "400":
-          description: "Invalid status value"
-      security:
-        - petstore_auth:
-            - "write:pets"
-            - "read:pets"
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
       x-swagger-router-controller: "api"
 
     post:
@@ -160,21 +202,42 @@ paths:
 
       responses:
         "200":
-          description: "successful operation"
+          description: "Account post response"
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Pet"
-        "400":
-          description: "Invalid status value"
-      security:
-        - petstore_auth:
-            - "write:pets"
-            - "read:pets"
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
       x-swagger-router-controller: "api"
 
   /api/order/assign:
-    update:
+    put:
       tags:
         - "api"
       summary: "order request"
@@ -201,6 +264,41 @@ paths:
           required: true
           schema:
             $ref: "#/definitions/assignOrderUpdateInquiry"
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
 
     post:
       tags:
@@ -232,78 +330,277 @@ paths:
 
       responses:
         "200":
-          description: "successful operation"
+          description: "Account post response"
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Pet"
-        "400":
-          description: "Invalid status value"
-      security:
-        - petstore_auth:
-            - "write:pets"
-            - "read:pets"
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
       x-swagger-router-controller: "api"
 
-  /source:
+  /api/account:
     get:
       tags:
-        - "source"
-      summary: "signin request"
-      description: "Global signin for all access"
-      operationId: "signinForm"
+        - "api"
+      summary: "account information"
+      description: "get account information"
+      operationId: "accountGet"
       produces:
         - "application/xml"
         - "application/json"
       parameters:
         - name: "v"
           in: "query"
-          description: "destiny app"
+          description: "version api"
           required: true
           type: "integer"
           default: 1
           minimum: 1
-        - name: "continue"
+        - name: "category"
           in: "query"
-          description: "destiny app"
-          required: false
+          description: "request category"
+          required: true
           type: "string"
-          # items:
-          #   type: "string"
-          #   default: "permissions"
-          #   enum:
-          #     - "permissions"
-          #     - "dashboard"
-          # collectionFormat: "multi"
+          items:
+            type: "string"
+            default: "self"
+            enum:
+              - "self"
+              - "driver"
+              - "employee"
+          collectionFormat: "multi"
+        - name: "accountId"
+          in: "query"
+          description: "id of account"
+          required: false
+          type: "integer"
+          minimum: 1
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"
+
       responses:
         "200":
-          description: "successful operation"
+          description: "Account post response"
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Pet"
-        "400":
-          description: "Invalid status value"
-      # security:
-      # - petstore_auth:
-      #     - "write:pets"
-      #     - "read:pets"
-      x-swagger-router-controller: "source"
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
 
-securityDefinitions:
-  petstore_auth:
-    type: "oauth2"
-    authorizationUrl: "http://petstore.swagger.io/oauth/dialog"
-    flow: "implicit"
-    scopes:
-      write:pets: "modify pets in your account"
-      read:pets: "read your pets"
-  api_key:
-    type: "apiKey"
-    name: "api_key"
-    in: "header"
+    put:
+      tags:
+        - "api"
+      summary: "order request"
+      description: "Order request from"
+      operationId: "accountUpdate"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/accountUpdateInquiry"
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
+    post:
+      tags:
+        - "api"
+      summary: "order request"
+      description: "Order request from"
+      operationId: "accountPost"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/accountPostInquiry"
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+
+      x-swagger-router-controller: "api"
 
 definitions:
+  accountPostInquiry:
+    type: "object"
+    properties:
+      fullName:
+        type: "string"
+      userName:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+      phoneCode:
+        type: "string"
+      phone:
+        type: "string"
+      image:
+        type: "string"
+
+  accountUpdateInquiry:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      phone:
+        type: "string"
+      email:
+        type: "string"
+      image:
+        type: "string"
+
   assignOrderUpdateInquiry:
     type: "object"
     properties:
