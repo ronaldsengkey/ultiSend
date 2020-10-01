@@ -8,8 +8,15 @@
  * orderId Long ID of the order that needs to be deleted
  * no response value expected for this operation
  **/
-exports.deleteOrder = function(orderId) {
-  return new Promise(function(resolve, reject) {
+
+exports.accountPost = function () {
+  return new Promise(async function (resolve, reject) {
+    resolve("Hello from service");
+  });
+};
+
+exports.deleteOrder = function (orderId) {
+  return new Promise(function (resolve, reject) {
     resolve();
   });
 }
@@ -21,12 +28,12 @@ exports.deleteOrder = function(orderId) {
  *
  * returns Map
  **/
-exports.getInventory = function() {
-  return new Promise(function(resolve, reject) {
+exports.getInventory = function () {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "key" : 0
-};
+      "key": 0
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -43,17 +50,17 @@ exports.getInventory = function() {
  * orderId Long ID of pet that needs to be fetched
  * returns Order
  **/
-exports.getOrderById = function(orderId) {
-  return new Promise(function(resolve, reject) {
+exports.getOrderById = function (orderId) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "petId" : 6,
-  "quantity" : 1,
-  "id" : 0,
-  "shipDate" : "2000-01-23T04:56:07.000+00:00",
-  "complete" : false,
-  "status" : "placed"
-};
+      "petId": 6,
+      "quantity": 1,
+      "id": 0,
+      "shipDate": "2000-01-23T04:56:07.000+00:00",
+      "complete": false,
+      "status": "placed"
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -70,17 +77,17 @@ exports.getOrderById = function(orderId) {
  * body Order order placed for purchasing the pet
  * returns Order
  **/
-exports.placeOrder = function(body) {
-  return new Promise(function(resolve, reject) {
+exports.placeOrder = function (body) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "petId" : 6,
-  "quantity" : 1,
-  "id" : 0,
-  "shipDate" : "2000-01-23T04:56:07.000+00:00",
-  "complete" : false,
-  "status" : "placed"
-};
+      "petId": 6,
+      "quantity": 1,
+      "id": 0,
+      "shipDate": "2000-01-23T04:56:07.000+00:00",
+      "complete": false,
+      "status": "placed"
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -88,4 +95,3 @@ exports.placeOrder = function(body) {
     }
   });
 }
-

@@ -25,13 +25,17 @@ paths:
     get:
       tags:
         - "api"
-      summary: "source request"
-      description: "Global source access"
+      summary: "rate request"
+      description: "To get information about rate service"
       operationId: "landingSource"
       produces:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
         - name: "v"
           in: "query"
           description: "version api"
@@ -103,6 +107,10 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
         - name: "v"
           in: "query"
           description: "version api"
@@ -175,6 +183,10 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
         - name: "v"
           in: "query"
           description: "version api"
@@ -247,6 +259,10 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
         - name: "v"
           in: "query"
           description: "version api"
@@ -310,6 +326,10 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
         - name: "v"
           in: "query"
           description: "version api"
@@ -375,6 +395,10 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
         - name: "v"
           in: "query"
           description: "version api"
@@ -453,6 +477,10 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
         - name: "v"
           in: "query"
           description: "version api"
@@ -516,6 +544,10 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
         - name: "v"
           in: "query"
           description: "version api"
@@ -526,13 +558,13 @@ paths:
         - name: "token"
           in: "query"
           description: "user token"
-          required: true
+          required: false
           type: "string"
-        - in: "body"
-          name: "body"
-          required: true
-          schema:
-            $ref: "#/definitions/accountPostInquiry"
+        # - in: "body"
+        #   name: "body"
+        #   required: true
+        #   schema:
+        #     $ref: "#/definitions/accountPostInquiry"
       responses:
         "200":
           description: "Account post response"
