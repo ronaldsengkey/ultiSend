@@ -9,8 +9,8 @@ var fs = require("fs"),
 var app = require("restana")();
 var swaggerTools = require("swagger-tools");
 var jsyaml = require("js-yaml");
-var serverPort = 8081;
-
+// var serverPort = 8081;
+var serverPort = process.env.APP_PORT;
 // swaggerRouter configuration
 var options = {
   swaggerUi: path.join(__dirname, "/swagger.json"),
@@ -39,7 +39,7 @@ swaggerTools.initializeMiddleware(swaggerDoc, async function (middleware) {
 
 
   // Start the server
-  app.start(serverPort, "0.0.0.0").then((server) => {});
+  app.start(serverPort, "0.0.0.0").then((server) => { console.log(serverPort) });
 
   mongoose.connect(mongoConf.mongoDb.url, {
     useUnifiedTopology: true

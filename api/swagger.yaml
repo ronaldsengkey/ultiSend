@@ -111,6 +111,10 @@ paths:
           in: "header"
           required: true
           type: "string"
+        - name: "clientKey"
+          in: "header"
+          required: true
+          type: "string"
         - name: "v"
           in: "query"
           description: "version api"
@@ -194,6 +198,11 @@ paths:
           type: "integer"
           default: 1
           minimum: 1
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"          
         - name: "service"
           in: "query"
           description: "service category (same day, Priority)"
@@ -602,6 +611,202 @@ paths:
 
       x-swagger-router-controller: "api"
 
+  /api/driver:
+    get:
+      tags:
+        - "api"
+      summary: "get driver list"
+      description: "get driver list"
+      operationId: "getDriver"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "clientKey"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"        
+        - name: "status"
+          in: "query"
+          description: "status of driver"
+          required: false
+          type: "string"        
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
+    post:
+      tags:
+        - "api"
+      summary: "driver created process"
+      description: "Driver created from"
+      operationId: "postDriver"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"          
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/driverInquiry"
+
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
+  /api/cronDriver:
+    post:
+      tags:
+        - "api"
+      summary: "cron job to get driver"
+      description: "cron job to get driver"
+      operationId: "cronDriver"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "token"
+          in: "query"
+          description: "user token"
+          required: true
+          type: "string"        
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
+
 definitions:
   accountPostInquiry:
     type: "object"
@@ -663,6 +868,25 @@ definitions:
       orderNotes:
         type: "string"
 
+  driverInquiry:
+    type: "object"
+    properties:
+      driverId:
+        type: "string"
+      driverName:
+        type: "string"
+      driverPhone:
+        type: "string"
+      driverAddress:
+        type: "string"
+      driverEmail:
+        type: "string"
+      driverImage:
+        type: "string"
+      driverStatus:
+        type: "string"
+        example: "on/off"        
+        
   orderInquiry:
     type: "object"
     properties:
