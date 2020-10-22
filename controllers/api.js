@@ -6,22 +6,10 @@ let isValid = '';
 const asym = require('../config/asymmetric');
 var arrStatus = ['Pending', 'Assign', 'Pick up', 'On Delivery', 'Delivered'];
 var arrService = ['sameDay', 'priority'];
+const validator = require('../class/validator');
+const accountService = require('../service/accountService');
 
 // validator for signature and token
-class validator {
-  constructor(signature, token) {
-    this.signature = signature;
-    this.token = token;
-  }
-  checkToken() {
-    console.log("This is token validator " + this.token);
-    return true;
-  }
-  checkSignature() {
-    console.log("This is signature validator " + this.signature);
-    return true;
-  }
-}
 
 module.exports.accountPost = function accountPost(req, res, next) {
   var signature = req.swagger.params["signature"].value;
@@ -49,6 +37,28 @@ module.exports.accountPost = function accountPost(req, res, next) {
       break;
   }
 };
+
+module.exports.accountGet = async function accountGet(req, res){
+  console.log("accountGet: ");
+  var signature = req.swagger.params["signature"].value;
+  var version = req.swagger.params["v"].value;
+  var token = req.swagger.params["token"].value;
+  // var data = req.swagger.params["body"].value;
+
+  isValid = new validator(signature, token);
+  if (isValid.checkToken()) {
+    let data = await isValid.getData();
+    data = await accountService.getData(data);
+    utils.writeJson(res, data);  
+  }
+  else{
+    utils.writeJson(res, {
+      responseCode: 401,
+      responseMessage: "Unauthorize"
+    });
+  }
+}
+
 
 module.exports.postOrder = async function postOrder(req, res, next) {
   var signature = req.swagger.params["signature"].value;
