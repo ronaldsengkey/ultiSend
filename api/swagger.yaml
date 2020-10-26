@@ -56,7 +56,7 @@ paths:
               - "priority"
           collectionFormat: "multi"
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
           type: "string"
@@ -136,7 +136,7 @@ paths:
               - "all"
           collectionFormat: "multi"
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
           type: "string"
@@ -199,7 +199,7 @@ paths:
           default: 1
           minimum: 1
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
           type: "string"          
@@ -280,7 +280,7 @@ paths:
           default: 1
           minimum: 1
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
           type: "string"
@@ -347,7 +347,7 @@ paths:
           default: 1
           minimum: 1
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
           type: "string"
@@ -393,6 +393,68 @@ paths:
                 description: unauthorize.
       x-swagger-router-controller: "api"
 
+  /api/company:
+    get:
+      tags:
+        - "api"
+      summary: "account information"
+      description: "get account information"
+      operationId: "companyGet"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "clientKey"
+          in: "header"
+          required: false
+          type: "string"
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+          
   /api/account:
     get:
       tags:
@@ -427,6 +489,7 @@ paths:
               - "self"
               - "driver"
               - "employee"
+              - "temp"
           collectionFormat: "multi"
         - name: "accountId"
           in: "query"
@@ -435,9 +498,13 @@ paths:
           type: "integer"
           minimum: 1
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
+          type: "string"
+        - name: "clientKey"
+          in: "header"
+          required: false
           type: "string"
 
       responses:
@@ -493,18 +560,18 @@ paths:
         - name: "v"
           in: "query"
           description: "version api"
-          required: true
+          required: false
           type: "integer"
           default: 1
           minimum: 1
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
           type: "string"
         - in: "body"
           name: "body"
-          required: true
+          required: false
           schema:
             $ref: "#/definitions/accountUpdateInquiry"
       responses:
@@ -555,25 +622,30 @@ paths:
       parameters:
         - name: "signature"
           in: "header"
-          required: true
+          required: false
           type: "string"
         - name: "v"
           in: "query"
           description: "version api"
-          required: true
+          required: false
           type: "integer"
           default: 1
           minimum: 1
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: false
           type: "string"
-        # - in: "body"
-        #   name: "body"
-        #   required: true
-        #   schema:
-        #     $ref: "#/definitions/accountPostInquiry"
+        - name: "flowEntry" #destiny Service
+          in: "query"
+          description: "destiny service"
+          required: false
+          type: "string"
+        - in: "body"
+          name: "body"
+          required: false
+          schema:
+            $ref: "#/definitions/accountPostInquiry"
       responses:
         "200":
           description: "Account post response"
@@ -638,7 +710,7 @@ paths:
           default: 1
           minimum: 1
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
           type: "string"        
@@ -706,7 +778,7 @@ paths:
           default: 1
           minimum: 1
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
           type: "string"          
@@ -765,7 +837,7 @@ paths:
         - "application/json"
       parameters:
         - name: "token"
-          in: "query"
+          in: "header"
           description: "user token"
           required: true
           type: "string"        
@@ -813,17 +885,21 @@ definitions:
     properties:
       fullName:
         type: "string"
-      userName:
-        type: "string"
       email:
         type: "string"
       password:
         type: "string"
-      phoneCode:
-        type: "string"
       phone:
         type: "string"
-      image:
+      phoneCode:
+        type: "string"
+      idCardNumber:
+        type: "string"
+      photo:
+        type: "string"
+      company_profile_id:
+        type: "string"
+      deviceId:
         type: "string"
 
   accountUpdateInquiry:

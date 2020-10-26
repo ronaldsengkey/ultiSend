@@ -1,0 +1,6 @@
+{
+    "service": {
+        "users": "http://localhost:8444/users",
+        "credentials": "http://localhost:8444/credentials"
+    }
+}

@@ -49,7 +49,7 @@ exports.getOrder = function (data) {
       });
       let query = await orderSchema.find(param);      
       await mongoose.connection.close();
-
+      console.log("query::", query);
       if (query.length > 0) {
           res.responseCode = process.env.SUCCESS_RESPONSE;
           res.responseMessage = "Success";

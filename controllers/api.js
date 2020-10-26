@@ -8,31 +8,57 @@ var arrStatus = ['Pending', 'Assign', 'Pick up', 'On Delivery', 'Delivered'];
 var arrService = ['sameDay', 'priority'];
 const validator = require('../class/validator');
 const accountService = require('../service/accountService');
+const driverDivisionId = '9'; //division id driver from postgre
 
 // validator for signature and token
 
-module.exports.accountPost = function accountPost(req, res, next) {
+module.exports.accountPost = async function accountPost(req, res, next) {
   var signature = req.swagger.params["signature"].value;
   var version = req.swagger.params["v"].value;
   var token = req.swagger.params["token"].value;
-  // var data = req.swagger.params["body"].value;
+  var flowEntry = req.swagger.params["flowEntry"].value;
+  var data = req.swagger.params["body"].value;
 
   isValid = new validator(signature, token);
+
+  data = await isValid.decryptObjectData(data);
+  console.log("data::", data);
+  if (!data) {
+    return utils.writeJson(res, {
+      responseCode: 406,
+      responseMessage: "Unable to read data"
+    })
+  }
 
   switch (version) {
     case 2:
       break;
     default:
       // call signature validator
-      if (isValid.checkSignature()) {
-        apiService
-          .accountPost(cnt)
-          .then(function (response) {
-            utils.writeJson(res, response);
-          })
-          .catch(function (response) {
-            utils.writeJson(res, response);
-          });
+      if (await isValid.checkSignature()) {
+        if (flowEntry == 'ultisend') {
+          data.division_id = driverDivisionId //driver
+          data.id_type = 'k'
+        }
+        data.signature = "null";
+        data.scopes = "null";
+        data.roles = "null";
+        data.accountPriority = "employee";
+        data.appId = isValid.appId;
+        data.userType = "ultisend";
+        console.log("data::", data);
+        await accountService.register(data).then(function(response){
+          console.log("response::", response);
+          utils.writeJson(res, response);
+        }).catch(function(response){
+          console.log("response::", response);
+          utils.writeJson(res, response);
+        });
+      } else {
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        })
       }
       break;
   }
@@ -43,12 +69,29 @@ module.exports.accountGet = async function accountGet(req, res){
   var signature = req.swagger.params["signature"].value;
   var version = req.swagger.params["v"].value;
   var token = req.swagger.params["token"].value;
+  let clientKey = req.swagger.params['clientKey'].value;
+  let category = req.swagger.params['category'].value;
+  let body = {};
   // var data = req.swagger.params["body"].value;
 
   isValid = new validator(signature, token);
-  if (isValid.checkToken()) {
+  if (await isValid.checkSignature() && await isValid.checkToken()) {
     let data = await isValid.getData();
     data = await accountService.getData(data);
+    if (data.responseCode != process.env.SUCCESS_RESPONSE) {
+      return utils.writeJson(res, data);
+    }
+    if (category == "temp") {
+      body = {
+        'confirmationStatus': '0',
+        'company_profile_id': data.data[0].company_id,
+        'division_id': driverDivisionId,
+      } 
+      data = await accountService.getDataTemp(body);
+    }
+    if (data.data) {
+      data.data = await asym.encryptArrayObjectRsa(data.data, clientKey); 
+    }
     utils.writeJson(res, data);  
   }
   else{
@@ -59,6 +102,99 @@ module.exports.accountGet = async function accountGet(req, res){
   }
 }
 
+module.exports.accountUpdate = async function accountUpdate(req, res){
+  console.log("accountUpdate: ");
+  var signature = req.swagger.params["signature"].value;
+  var version = req.swagger.params["v"].value;
+  var token = req.swagger.params["token"].value;
+  let data = req.swagger.params["body"].value;
+
+  isValid = new validator(signature, token);
+  data = await isValid.decryptObjectData(data);
+  if (!data) {
+    return utils.writeJson(res, {
+      responseCode: 406,
+      responseMessage: "Unable to read data"
+    })
+  }
+  if (await isValid.checkSignature() && await isValid.checkToken()) {
+    if (data.confirmation == "yes") {
+      let userData = await isValid.getData();
+      userData = await accountService.getData(userData);
+      if (userData.responseCode != process.env.SUCCESS_RESPONSE) {
+        return utils.writeJson(res, userData);
+      }
+      let body = {
+        'phoneCode': data.phoneCode,
+        'phone': data.phone,
+        'accountCategory': 'employee',
+        'confirmationStatus': '0',
+        'company_profile_id': userData.data[0].company_id,
+        'division_id': driverDivisionId,
+      } 
+      let dataTemp = await accountService.getDataTemp(body);
+      if (dataTemp.responseCode != process.env.SUCCESS_RESPONSE) {
+        return utils.writeJson(res, dataTemp);
+      }
+      console.log("dataTemp::", dataTemp);
+      body = {
+        "phone": data.phone,
+        'phoneCode': data.phoneCode,
+        'accountPriority': dataTemp.data[0].accountCategory,
+        'otpCode': dataTemp.data[0].confirmationCode,
+        'category': "confirm",
+      };
+      let dataConfirm = await accountService.confirmDataEmployee(body);
+      utils.writeJson(res, dataConfirm);
+    }
+    else if(data.confirmation == "no"){
+      let body = {
+        "phone": data.phone,
+        'phoneCode': data.phoneCode,
+        'accountPriority': 'employee',
+        'otpCode': "no",
+        'category': "confirm",
+      };
+      console.log("body::", body);
+      let dataConfirm = await accountService.confirmDataEmployee(body);
+      utils.writeJson(res, dataConfirm);
+    }
+    else {
+      utils.writeJson(res, {
+        responseCode: 406,
+        responseMessage: "unaccepted"
+      }); 
+    }
+  }
+  else{
+    utils.writeJson(res, {
+      responseCode: 401,
+      responseMessage: "Unauthorize"
+    });
+  }
+}
+
+module.exports.companyGet = async function companyGet(req, res){
+  var signature = req.swagger.params["signature"].value;
+  var version = req.swagger.params["v"].value;
+  let clientKey = req.swagger.params['clientKey'].value;
+  var data;
+
+  isValid = new validator(signature);
+  if (isValid.checkSignature()) {
+    data = await accountService.getCompany({});
+    if (data.data) {
+      data.data = await asym.encryptArrayObjectRsa(data.data, clientKey); 
+    }
+    utils.writeJson(res, data);  
+  }
+  else{
+    utils.writeJson(res, {
+      responseCode: 401,
+      responseMessage: "Unauthorize"
+    });
+  }
+}
 
 module.exports.postOrder = async function postOrder(req, res, next) {
   var signature = req.swagger.params["signature"].value;
@@ -174,7 +310,7 @@ module.exports.postOrder = async function postOrder(req, res, next) {
       break;
     default:
       // call signature validator
-      if (isValid.checkSignature()) {
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         data.serviceName=service;
         data.status='pending';
 
@@ -186,6 +322,12 @@ module.exports.postOrder = async function postOrder(req, res, next) {
           .catch(function (response) {
             utils.writeJson(res, response);
           });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
       }
       break;
   }
@@ -255,7 +397,7 @@ module.exports.assignOrderPost = async function assignOrderPost(req, res, next) 
       break;
     default:
       // call signature validator
-      if (isValid.checkSignature()) {
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         // data.serviceName=service;
         data.status='Assign';
 
@@ -267,6 +409,12 @@ module.exports.assignOrderPost = async function assignOrderPost(req, res, next) 
           .catch(function (response) {
             utils.writeJson(res, response);
           });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
       }
       break;
   }
@@ -343,7 +491,7 @@ module.exports.assignOrderUpdate = async function assignOrderUpdate(req, res, ne
       break;
     default:
       // call signature validator
-      if (isValid.checkSignature()) {
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         apiService
           .assignOrderUpdate(data)
           .then(function (response) {
@@ -352,6 +500,12 @@ module.exports.assignOrderUpdate = async function assignOrderUpdate(req, res, ne
           .catch(function (response) {
             utils.writeJson(res, response);
           });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
       }
       break;
   }
@@ -362,23 +516,23 @@ module.exports.getOrder = async function getOrder(req, res, next) {
   var version = req.swagger.params["v"].value;
   var token = req.swagger.params["token"].value;
 
-  signature = await asym.decrypterRsa(signature);
-  if (!signature) {
-      utils.writeJson(res, {
-          responseCode: process.env.NOTACCEPT_RESPONSE,
-          responseMessage: "Unable to read signature",
-      });
-      return;
-  }
+  // signature = await asym.decrypterRsa(signature);
+  // if (!signature) {
+  //     utils.writeJson(res, {
+  //         responseCode: process.env.NOTACCEPT_RESPONSE,
+  //         responseMessage: "Unable to read signature",
+  //     });
+  //     return;
+  // }
   let clientKey = req.swagger.params['clientKey'].value;
-  clientKey = await asym.decrypterRsa(clientKey);
-  if (!clientKey) {
-      utils.writeJson(res, {
-          responseCode: process.env.NOTACCEPT_RESPONSE,
-          responseMessage: "Unable to read clientKey",
-      });
-      return;
-  }
+  // clientKey = await asym.decrypterRsa(clientKey);
+  // if (!clientKey) {
+  //     utils.writeJson(res, {
+  //         responseCode: process.env.NOTACCEPT_RESPONSE,
+  //         responseMessage: "Unable to read clientKey",
+  //     });
+  //     return;
+  // }
   // console.log('clientKey =>',clientKey)
   let param = {}
   var service = req.swagger.params["service"].value;
@@ -391,16 +545,24 @@ module.exports.getOrder = async function getOrder(req, res, next) {
       break;
     default:
       // call signature validator
-      if (isValid.checkSignature()) {
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         apiService
           .getOrder(param)
           .then(async function (response) {
-            response.data = await asym.encryptArrayObjectRsa(response.data, clientKey);
+            if (response.data) {
+              response.data = await asym.encryptArrayObjectRsa(response.data, clientKey); 
+            }
             utils.writeJson(res, response);
           })
           .catch(function (response) {
             utils.writeJson(res, response);
           });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
       }
       break;
   }
@@ -474,7 +636,7 @@ module.exports.postDriver = async function postDriver(req, res, next) {
       break;
     default:
       // call signature validator
-      if (isValid.checkSignature()) {
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         apiService
           .postDriver(data)
           .then(function (response) {
@@ -483,6 +645,12 @@ module.exports.postDriver = async function postDriver(req, res, next) {
           .catch(function (response) {
             utils.writeJson(res, response);
           });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
       }
       break;
   }
@@ -494,23 +662,23 @@ module.exports.getDriver = async function getDriver(req, res, next) {
   let clientKey = req.swagger.params['clientKey'].value;
   var status = req.swagger.params["status"].value;
 
-  signature = await asym.decrypterRsa(signature);
-  if (!signature) {
-      utils.writeJson(res, {
-          responseCode: process.env.NOTACCEPT_RESPONSE,
-          responseMessage: "Unable to read signature",
-      });
-      return;
-  }
+  // signature = await asym.decrypterRsa(signature);
+  // if (!signature) {
+  //     utils.writeJson(res, {
+  //         responseCode: process.env.NOTACCEPT_RESPONSE,
+  //         responseMessage: "Unable to read signature",
+  //     });
+  //     return;
+  // }
 
-  clientKey = await asym.decrypterRsa(clientKey);
-  if (!clientKey) {
-      utils.writeJson(res, {
-          responseCode: process.env.NOTACCEPT_RESPONSE,
-          responseMessage: "Unable to read clientKey",
-      });
-      return;
-  }
+  // clientKey = await asym.decrypterRsa(clientKey);
+  // if (!clientKey) {
+  //     utils.writeJson(res, {
+  //         responseCode: process.env.NOTACCEPT_RESPONSE,
+  //         responseMessage: "Unable to read clientKey",
+  //     });
+  //     return;
+  // }
   // console.log('clientKey =>',clientKey)
   let param = {}
   if(status) {param.driverStatus=status}
@@ -521,7 +689,7 @@ module.exports.getDriver = async function getDriver(req, res, next) {
       break;
     default:
       // call signature validator
-      if (isValid.checkSignature()) {
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         apiService
           .getDriver(param)
           .then(async function (response) {
@@ -532,11 +700,17 @@ module.exports.getDriver = async function getDriver(req, res, next) {
             utils.writeJson(res, response);
           });
       }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
+      }
       break;
   }
 };
 
-module.exports.getDriverOld = function getDriverOld(req, res, next) {
+module.exports.getDriverOld = async function getDriverOld(req, res, next) {
   var token = req.swagger.params["token"].value;
   var signature = req.swagger.params["signature"].value;
   var secretKey = req.swagger.params["secretKey"].value;
@@ -566,7 +740,7 @@ module.exports.getDriverOld = function getDriverOld(req, res, next) {
       break;
     default:
       // call signature validator
-      if (isValid.checkSignature()) {
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         apiService
           .getDriverOld(param)
           .then(async function (response) {
@@ -576,6 +750,12 @@ module.exports.getDriverOld = function getDriverOld(req, res, next) {
           .catch(function (response) {
             utils.writeJson(res, response);
           });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
       }
       break;
   }

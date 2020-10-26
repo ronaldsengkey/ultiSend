@@ -100,6 +100,7 @@ async function encrypterRsa(text, clientKey) {
 }
 
 async function encryptArrayObjectRsa(arrayObject, clientKey, except = []) {
+    // console.log("arrayObject::", arrayObject);
     let result = [];
     let i = 0
     for (let object of arrayObject) {
