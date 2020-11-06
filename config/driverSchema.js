@@ -5,23 +5,27 @@ const Schema = mongoose.Schema;
 const templateSchema = new Schema({
     driverId: {
         type: String,
-        required: true
+        required: false
     },
     driverName: {
         type: String,
-        required: true
+        required: false
     },
     driverPhone: {
         type: String,
-        required: true
+        required: false
     },
     driverAddress: {
         type: String,
-        required: true
+        required: false
     },
     driverEmail: {
         type: String,
-        required: true
+        required: false
+    },
+    driverVehicleInfo: {
+        type: String,
+        required: false
     },
     driverImage: {
         type: String,
@@ -29,7 +33,7 @@ const templateSchema = new Schema({
     },    
     driverStatus: {
         type: String,
-        required: true
+        required: false
         // on/off
     },
     createdDate: {

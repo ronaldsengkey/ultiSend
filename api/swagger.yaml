@@ -491,6 +491,11 @@ paths:
               - "employee"
               - "temp"
           collectionFormat: "multi"
+        - name: "flowEntry" #destiny Service
+          in: "query"
+          description: "destiny service"
+          required: false
+          type: "string"
         - name: "accountId"
           in: "query"
           description: "version api"

@@ -90,6 +90,7 @@ exports.postDriver = function (data) {
             driverAddress: data.driverAddress,
             driverEmail: data.driverEmail,
             driverImage: data.driverImage,
+            driverVehicleInfo: data.driverVehicleInfo,
             driverStatus: 'off',
         });
         let na = await newApi.save();

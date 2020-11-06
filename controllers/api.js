@@ -71,6 +71,7 @@ module.exports.accountGet = async function accountGet(req, res){
   var token = req.swagger.params["token"].value;
   let clientKey = req.swagger.params['clientKey'].value;
   let category = req.swagger.params['category'].value;
+  let flowEntry = req.swagger.params['flowEntry'].value;
   let body = {};
   // var data = req.swagger.params["body"].value;
 
@@ -89,7 +90,7 @@ module.exports.accountGet = async function accountGet(req, res){
       } 
       data = await accountService.getDataTemp(body);
     }
-    if (data.data) {
+    if (data.data && flowEntry == 'ultisend') {
       data.data = await asym.encryptArrayObjectRsa(data.data, clientKey); 
     }
     utils.writeJson(res, data);  
@@ -146,6 +147,20 @@ module.exports.accountUpdate = async function accountUpdate(req, res){
       };
       let dataConfirm = await accountService.confirmDataEmployee(body);
       utils.writeJson(res, dataConfirm);
+      userData = await accountService.getData(body);
+      body = {
+        "driverId": userData.data[0].employee_id,
+        "driverName": userData.data[0].employee_name,
+        "driverPhone": userData.data[0].employee_phone,
+        "driverAddress": userData.data[0].employee_address,
+        "driverEmail": userData.data[0].employee_email,
+        "driverVehicleInfo": dataTemp.data[0].vehicleInfo,
+        "driverImage": userData.data[0].employee_profile_img,
+        "driverStatus": 'off'
+      }
+      console.log("body::", body);
+      let result = await apiService.postDriver(body);
+      console.log("result::", result);
     }
     else if(data.confirmation == "no"){
       let body = {
