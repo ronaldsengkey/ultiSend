@@ -46,14 +46,56 @@ module.exports.accountPost = async function accountPost(req, res, next) {
         data.accountPriority = "employee";
         data.appId = isValid.appId;
         data.userType = "ultisend";
-        console.log("data::", data);
-        await accountService.register(data).then(function(response){
-          console.log("response::", response);
-          utils.writeJson(res, response);
-        }).catch(function(response){
-          console.log("response::", response);
-          utils.writeJson(res, response);
-        });
+        // console.log("data::", data);
+        let regis = await accountService.register(data);
+        // console.log("regis::", regis);
+        if (regis.responseCode != process.env.SUCCESS_RESPONSE) {
+          return utils.writeJson(res, regis);  
+        }
+        let body = {
+          'phoneCode': data.phoneCode,
+          'phone': data.phone,
+          'accountCategory': 'employee',
+          'confirmationStatus': '0',
+          'company_profile_id': data.company,
+          'division_id': driverDivisionId,
+        } 
+        let dataTemp = await accountService.getDataTemp(body);
+        // console.log("dataTemp::", dataTemp);
+        if (dataTemp.responseCode != process.env.SUCCESS_RESPONSE) {
+          return utils.writeJson(res, dataTemp);
+        }
+        body = {
+          "phone": data.phone,
+          'phoneCode': data.phoneCode,
+          'accountPriority': dataTemp.data[0].accountCategory,
+          'otpCode': dataTemp.data[0].confirmationCode,
+          'category': "confirm",
+        };
+        let dataConfirm = await accountService.confirmDataEmployee(body);
+        // console.log("dataConfirm::", dataConfirm);
+        if (dataConfirm.responseCode != process.env.SUCCESS_RESPONSE) {
+          return utils.writeJson(res, dataConfirm);
+        }
+        let userData = await accountService.getData(body);
+        // console.log("userData::", userData);
+        if (userData.responseCode != process.env.SUCCESS_RESPONSE) {
+          return utils.writeJson(res, userData);
+        }
+        body = {
+          "driverId": userData.data[0].employee_id,
+          "driverName": userData.data[0].employee_name,
+          "driverPhone": userData.data[0].employee_phone,
+          "driverAddress": userData.data[0].employee_address,
+          "driverEmail": userData.data[0].employee_email,
+          "driverVehicleInfo": dataTemp.data[0].vehicleInfo,
+          "driverImage": userData.data[0].employee_profile_img,
+          "driverStatus": 'off'
+        }
+        // console.log("body::", body);
+        let result = await apiService.postDriver(body);
+        // console.log("result::", result);
+        utils.writeJson(res, result);
       } else {
         utils.writeJson(res, {
           responseCode: 401,
@@ -79,6 +121,7 @@ module.exports.accountGet = async function accountGet(req, res){
   if (await isValid.checkSignature() && await isValid.checkToken()) {
     let data = await isValid.getData();
     data = await accountService.getData(data);
+    console.log("data::", data);
     if (data.responseCode != process.env.SUCCESS_RESPONSE) {
       return utils.writeJson(res, data);
     }
@@ -565,7 +608,7 @@ module.exports.getOrder = async function getOrder(req, res, next) {
           .getOrder(param)
           .then(async function (response) {
             if (response.data) {
-              response.data = await asym.encryptArrayObjectRsa(response.data, clientKey); 
+              response.data = await asym.encryptArrayObjectRsa(response.data, clientKey, [], ['assignId']); 
             }
             utils.writeJson(res, response);
           })

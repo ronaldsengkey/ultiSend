@@ -47,9 +47,9 @@ exports.getOrder = function (data) {
       await mongoose.connect(mongoConf.mongoDb.url, {
           useNewUrlParser: true
       });
-      let query = await orderSchema.find(param);      
+      let query = await orderSchema.find(param).populate('assignId');
       await mongoose.connection.close();
-      console.log("query::", query);
+      console.log("query::", query[0].assignId["_id"]);
       if (query.length > 0) {
           res.responseCode = process.env.SUCCESS_RESPONSE;
           res.responseMessage = "Success";

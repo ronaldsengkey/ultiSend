@@ -3,7 +3,8 @@ require('dotenv').config();
 var fs = require("fs"),
   path = require("path"),
   mongoose = require('mongoose').set('debug', true),
-  mongoConf = require('./config/mongo.js');
+  mongoConf = require('./config/mongo.js'),
+  bodyParser = require('body-parser');
 // http = require("http");
 
 var app = require("restana")();
@@ -36,7 +37,21 @@ swaggerTools.initializeMiddleware(swaggerDoc, async function (middleware) {
   // Serve the Swagger documents and Swagger UI
   app.use(middleware.swaggerUi());
 
-
+  app.use(
+    bodyParser.json({
+      limit: "2mb",
+    })
+  );
+  
+  // app.use(helmet());
+  
+  app.use(
+    bodyParser.urlencoded({
+      limit: "2mb",
+      extended: true,
+      parameterLimit: 2000,
+    })
+  );
 
   // Start the server
   app.start(serverPort, "0.0.0.0").then((server) => { console.log(serverPort) });

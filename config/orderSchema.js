@@ -52,8 +52,8 @@ const templateSchema = new Schema({
         required: true
     },
     assignId: {
-        type: String,
-        required: false
+        type: Schema.Types.ObjectId,
+        ref: 'driver'
     },    
     assignName: {
         type: String,

@@ -99,18 +99,18 @@ async function encrypterRsa(text, clientKey) {
     }
 }
 
-async function encryptArrayObjectRsa(arrayObject, clientKey, except = []) {
+async function encryptArrayObjectRsa(arrayObject, clientKey, except = [], json = []) {
     // console.log("arrayObject::", arrayObject);
     let result = [];
     let i = 0
     for (let object of arrayObject) {
-        result[i] = await encryptObjectRsa(object, clientKey, except);
+        result[i] = await encryptObjectRsa(object, clientKey, except, json);
         i++;
     }
     return result;
 }
 
-async function encryptObjectRsa(object, clientKey, except = []) {
+async function encryptObjectRsa(object, clientKey, except = [], json = []) {
     let result = {};
     let keys;
     try {
@@ -121,10 +121,12 @@ async function encryptObjectRsa(object, clientKey, except = []) {
     // console.log('key: ', keys);
     for (let key of keys) {
         // result[await encrypter(key + '', clientKey)] = await encrypter(object[key] + '', clientKey)
-        if (except.includes(key)) {
-            result[key] = object[key]
-        } else {
-            result[key] = await encrypterRsa(object[key], clientKey)
+        result[key] = object[key];
+        if (json.includes(key)) {
+            result[key] = JSON.stringify(result[key])
+        }
+        if (!except.includes(key)) {
+            result[key] = await encrypterRsa(result[key], clientKey)
         }
     }
     return result;
