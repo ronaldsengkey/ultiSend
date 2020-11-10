@@ -198,22 +198,17 @@ paths:
           type: "integer"
           default: 1
           minimum: 1
-        - name: "token"
-          in: "header"
-          description: "user token"
-          required: true
-          type: "string"          
-        - name: "service"
-          in: "query"
-          description: "service category (same day, Priority)"
-          required: true
-          type: "string"
-          items:
-            type: "string"
-            default: "sameDay"
-            enum:
-              - "sameDay"
-              - "priority"
+        # - name: "service"
+        #   in: "query"
+        #   description: "service category (same day, Priority)"
+        #   required: true
+        #   type: "string"
+        #   items:
+        #     type: "string"
+        #     default: "sameDay"
+        #     enum:
+        #       - "sameDay"
+        #       - "priority"
           collectionFormat: "multi"
         - in: "body"
           name: "body"
@@ -257,6 +252,71 @@ paths:
                 description: unauthorize.
       x-swagger-router-controller: "api"
 
+
+    put:
+      tags:
+        - "api"
+      summary: "order request"
+      description: "Order update from"
+      operationId: "putOrder"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+          collectionFormat: "multi"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/putOrderInquiry"
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+      
   /api/order/assign:
     put:
       tags:
@@ -973,6 +1033,9 @@ definitions:
     properties:
       orderId:
         type: "string"
+      service:
+        type: "string"
+        example: "sameDay, priority"
       merchantName:
         type: "string"
       merchantAddress:
@@ -985,6 +1048,17 @@ definitions:
         type: "string"
       receiverPhone:
         type: "string"
+
+  putOrderInquiry:
+    type: "object"
+    properties:
+      orderCode:
+        type: "string"
+        example: "7"
+      status:
+        type: "string"
+        example: "pending, ready"
+
 
   ApiResponse:
     type: "object"

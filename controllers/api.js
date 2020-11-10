@@ -4,11 +4,14 @@ var utils = require('../utils/writer.js');
 var apiService = require('../service/apiService');
 let isValid = '';
 const asym = require('../config/asymmetric');
-var arrStatus = ['Pending', 'Assign', 'Pick up', 'On Delivery', 'Delivered'];
+// var arrStatus = ['Pending', 'Assign', 'Pick up', 'On Delivery', 'Delivered'];
+var arrStatus = ['Pending', 'Assigned', 'Pickup', 'Delivering', 'Delivered', 'Cancelled'];
 var arrService = ['sameDay', 'priority'];
 const validator = require('../class/validator');
 const accountService = require('../service/accountService');
-const driverDivisionId = '9'; //division id driver from postgre
+const checking = require('../controllers/check');
+
+const driverDivisionId = '9'; //division id driver from postgreq
 
 // validator for signature and token
 
@@ -257,47 +260,46 @@ module.exports.companyGet = async function companyGet(req, res){
 module.exports.postOrder = async function postOrder(req, res, next) {
   var signature = req.swagger.params["signature"].value;
   var version = req.swagger.params["v"].value;
-  var token = req.swagger.params["token"].value;
   var data = req.swagger.params["body"].value;
+  // console.log('data =>',data)
+  // isValid = new validator(signature, token);
 
-  isValid = new validator(signature, token);
+  // var service = req.swagger.params['service'].value;
+  // if (!service) {
+  //     utils.writeJson(res, {
+  //         responseCode: process.env.WRONGINPUT_RESPONSE,
+  //         responseMessage: "service type is required",
+  //     });
+  //     return;
+  // } else {
+  //     if (arrService.indexOf(service) < 0) {
+  //         utils.writeJson(res, {
+  //             responseCode: process.env.WRONGINPUT_RESPONSE,
+  //             responseMessage: "Please insert service with sameDay, priority",
+  //         });
+  //         return;
+  //     }
+  // }
 
-  var service = req.swagger.params['service'].value;
-  if (!service) {
-      utils.writeJson(res, {
-          responseCode: process.env.WRONGINPUT_RESPONSE,
-          responseMessage: "service type is required",
-      });
-      return;
-  } else {
-      if (arrService.indexOf(service) < 0) {
-          utils.writeJson(res, {
-              responseCode: process.env.WRONGINPUT_RESPONSE,
-              responseMessage: "Please insert service with sameDay, priority",
-          });
-          return;
-      }
-  }
-
-  let result = false;
-  let keys = Object.keys(data);
-  for (let key of keys) {
-    //   data[key] = asim.decryptAes(data[key]);
-    data[key] = await asym.decrypterRsa(data[key]);
-    if (!data[key]) {
-      result = {
-          responseCode: process.env.NOTACCEPT_RESPONSE,
-          responseMessage: "Unable to read " + key,
-      };
-      break;
-    }
-  }
+  // let result = false;
+  // let keys = Object.keys(data);
+  // for (let key of keys) {
+  //   //   data[key] = asim.decryptAes(data[key]);
+  //   data[key] = await asym.decrypterRsa(data[key]);
+  //   if (!data[key]) {
+  //     result = {
+  //         responseCode: process.env.NOTACCEPT_RESPONSE,
+  //         responseMessage: "Unable to read " + key,
+  //     };
+  //     break;
+  //   }
+  // }
   
-  console.log('data =>', data);
-  if (result) {
-      utils.writeJson(res, result);
-      return;
-  }
+  // console.log('data =>', data);
+  // if (result) {
+  //     utils.writeJson(res, result);
+  //     return;
+  // }
 
   if (!data.orderCode) {
       utils.writeJson(res, {
@@ -306,6 +308,21 @@ module.exports.postOrder = async function postOrder(req, res, next) {
       });
       return;
   }
+  if (!data.serviceName) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "serviceName is required",
+      });
+      return;
+  } else {
+      if (arrService.indexOf(data.serviceName) < 0) {
+          utils.writeJson(res, {
+              responseCode: process.env.WRONGINPUT_RESPONSE,
+              responseMessage: "Please insert service with sameDay, priority",
+          });
+          return;
+      }
+  }  
   if (!data.merchantName) {
       utils.writeJson(res, {
           responseCode: process.env.WRONGINPUT_RESPONSE,
@@ -355,6 +372,13 @@ module.exports.postOrder = async function postOrder(req, res, next) {
       });
       return;
   }
+  if (!data.secretKey) {
+    utils.writeJson(res, {
+        responseCode: process.env.WRONGINPUT_RESPONSE,
+        responseMessage: "secretKey is required",
+    });
+    return;
+  }
   if (!data.userCreated) {
       utils.writeJson(res, {
           responseCode: process.env.WRONGINPUT_RESPONSE,
@@ -368,12 +392,57 @@ module.exports.postOrder = async function postOrder(req, res, next) {
       break;
     default:
       // call signature validator
-      if (await isValid.checkSignature() && await isValid.checkToken()) {
-        data.serviceName=service;
+      // if (await isValid.checkSignature() && await isValid.checkToken()) {
+      let cs = await checking.checkSignature(signature);
+      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
         data.status='pending';
-
         apiService
           .postOrder(data)
+          .then(function (response) {
+            utils.writeJson(res, response);
+          })
+          .catch(function (response) {
+            utils.writeJson(res, response);
+          });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
+      }
+      break;
+  }
+};
+
+module.exports.putOrder = async function putOrder(req, res, next) {
+  var signature = req.swagger.params["signature"].value;
+  var version = req.swagger.params["v"].value;
+  var data = req.swagger.params["body"].value;
+  if (!data.orderCode) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "orderCode is required",
+      });
+      return;
+  }
+  
+  if (!data.status) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "status is required",
+      });
+      return;
+  }
+  
+  switch (version) {
+    case 2:
+      break;
+    default:
+      let cs = await checking.checkSignature(signature);
+      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+        apiService
+          .putOrder(data)
           .then(function (response) {
             utils.writeJson(res, response);
           })
@@ -530,7 +599,7 @@ module.exports.assignOrderUpdate = async function assignOrderUpdate(req, res, ne
     if (arrStatus.indexOf(data.status) < 0) {
       utils.writeJson(res, {
           responseCode: process.env.WRONGINPUT_RESPONSE,
-          responseMessage: "Please insert service with 'Pending', 'Assign', 'Pick up', 'On Delivery', 'Delivered'",
+          responseMessage: "Please insert service with 'Pending', 'Assigned', 'Pickup', 'Delivering', 'Delivered', 'Cancelled'",
       });
       return;
     }
@@ -583,6 +652,7 @@ module.exports.getOrder = async function getOrder(req, res, next) {
   //     return;
   // }
   let clientKey = req.swagger.params['clientKey'].value;
+  console.log('clientKey ye =>',clientKey)
   // clientKey = await asym.decrypterRsa(clientKey);
   // if (!clientKey) {
   //     utils.writeJson(res, {

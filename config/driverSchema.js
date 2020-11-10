@@ -27,6 +27,10 @@ const templateSchema = new Schema({
         type: String,
         required: false
     },
+    driverVehicleInfo: {
+        type: String,
+        required: false
+    },
     driverImage: {
         type: String,
         required: false

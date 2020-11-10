@@ -4,6 +4,8 @@ var mongoConf = require('../config/mongo');
 var orderSchema = require('../config/orderSchema');
 var orderLogSchema = require('../config/orderLogSchema');
 var driverSchema = require('../config/driverSchema');
+var FormData = require('form-data');
+var fs = require('fs');
 
 const moment = require('moment');
 const request = require('request');
@@ -201,10 +203,12 @@ exports.postOrder = function (data) {
           receiverPhone: data.receiverPhone,
           pickupTime: data.pickupTime,
           status: data.status,
+          secretKey: data.secretKey,
           orderItem: data.orderItem,
           userCreated: data.userCreated,
       });
       let na = await newApi.save();
+      // let na = {};
       await mongoose.connection.close();
       if (na) {
           res.responseCode = process.env.SUCCESS_RESPONSE;
@@ -212,6 +216,59 @@ exports.postOrder = function (data) {
       } else {
           res.responseCode = process.env.FAILED_RESPONSE;
           res.responseMessage = "Failed create order";
+      }
+      resolve(res);
+
+    } catch (err) {
+        console.log('Error for create order ==> ', err)
+        res = {
+            'responseCode': process.env.ERRORINTERNAL_RESPONSE,
+            'responseMessage': 'Internal server error'
+        }
+        resolve(res);
+    }    
+  });
+}
+exports.putOrder = function (data) {
+  console.log('putOrder data =>',data)
+  return new Promise(async function (resolve, reject) {
+    let res = {};
+    try {
+      await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
+
+      let query = await orderSchema.find({"orderCode": data.orderCode});
+      console.log('query =>',query)
+      if(query){
+        // console.log('query =>',query)
+        // let na = {};
+        let na = await orderSchema.findOneAndUpdate({"_id": query[0]._id}, {
+          $set: {
+            status: data.status
+          }
+        }, {
+          useFindAndModify: false
+        });        
+        await mongoose.connection.close();
+        let messageNotif = "Pesanan " + query[0].orderCode + ", atas nama "+ query[0].receiverName +" sudah siap di ambil";
+        // send notif 
+        var ds = {};
+        ds.messageNotif=messageNotif;
+        ds.orderCode = query[0].orderCode;
+        ds.merchantName = query[0].merchantName;
+
+        await sendNotif(ds);
+
+        console.log('messageNotif =>',messageNotif)
+        if (na) {
+            res.responseCode = process.env.SUCCESS_RESPONSE;
+            res.responseMessage = "Order updated";
+        } else {
+            res.responseCode = process.env.FAILED_RESPONSE;
+            res.responseMessage = "Failed updat order";
+        }
+      }else{
+        res.responseCode = process.env.FAILED_RESPONSE;
+        res.responseMessage = "Failed updat order";
       }
       resolve(res);
 
@@ -235,7 +292,7 @@ exports.assignOrderUpdate = function (data) {
   return new Promise(async function (resolve, reject) {
     let res = {}; var assignImage='';
     try {
-      console.log('assignOrderUpdate =?',data)
+      console.log('assignOrderUpdate data =>',data)
       // let sl = await checkLog(data)
       let sl = [];
       if(sl.length>0){
@@ -243,15 +300,6 @@ exports.assignOrderUpdate = function (data) {
           res.responseMessage = "Failed update assign order";
       }else{
           await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
-          // insert log
-          let newApi = new orderLogSchema({
-            orderId: data.orderId,
-            driverId: data.driverId,
-            responseNotes: data.responseNotes,
-            status: data.status,
-            userCreated: data.userCreated,
-          });
-          await newApi.save();
           // update order status
           let na = await orderSchema.findOneAndUpdate({"_id": data.orderId}, {
             $set: {
@@ -260,7 +308,8 @@ exports.assignOrderUpdate = function (data) {
           }, {
             useFindAndModify: false
           });
-          if(data.status == 'Delivered'){
+          console.log('nanananananana=>',na)
+          if(data.status == 'delivered'){
             // update driver status
             await driverSchema.findOneAndUpdate({"driverId": data.driverId}, {
               $set: {
@@ -271,14 +320,40 @@ exports.assignOrderUpdate = function (data) {
             });
           }
   
-          await mongoose.connection.close();
           if (na) {
-              res.responseCode = process.env.SUCCESS_RESPONSE;
-              res.responseMessage = "Success,update assign order"
+            // insert log
+            let newApi = new orderLogSchema({
+              orderId: data.orderId,
+              driverId: data.driverId,
+              responseNotes: data.responseNotes,
+              status: data.status,
+              userCreated: data.userCreated,
+            });
+            await newApi.save();
+
+            let query = await driverSchema.find({"driverId": data.driverId});
+            console.log('driverSchema =>',query.length)
+            if(query.length >0){
+              var ds = {};
+              ds.courierPhoto = query[0].driverImage;
+              ds.courierName = query[0].driverName;
+              ds.courierPhoneNumber = query[0].driverPhone;
+              ds.courierVehicleInfo = query[0].driverVehicleInfo;
+              ds.status = data.status;
+              ds.orderCode = na.orderCode;
+              ds.secretKey=na.secretKey;
+              var uu = await updateUltisend(ds)
+              console.log('updateUltisend =>',uu)  
+            }
+  
+            res.responseCode = process.env.SUCCESS_RESPONSE;
+            res.responseMessage = "Success,update assign order"
           } else {
-              res.responseCode = process.env.FAILED_RESPONSE;
-              res.responseMessage = "Failed assign order";
+            res.responseCode = process.env.FAILED_RESPONSE;
+            res.responseMessage = "Failed assign order";
           }
+          await mongoose.connection.close();
+
       }
       resolve(res);      
     } catch (err) {
@@ -458,6 +533,7 @@ function extend(target) {
 
 async function getOrderReff() {
   var today = new Date();
+  var day = today.getDate();
   var head = 'REFF/'+ moment().format('YYYYMMDD');
   today.setDate(today.getDate() - 1);
   var tomorow = new Date();
@@ -465,19 +541,18 @@ async function getOrderReff() {
   await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
 
   let query = await orderSchema.aggregate([
-    {
-      $match: { "createdDate": { "$gte": today, "$lt": tomorow } } 
-    },
-    {
-      $group: { _id: null, count: { $sum: 1 } }
-    }
+    {$project: {day: {$dayOfMonth: '$createdDate'}, month: {$month: '$createdDate'}, year: {$year: '$createdDate'} }},
+    {$match: {day: day, month: today.getMonth()+1, year: today.getFullYear()} },
+    {$group: { _id: null, count: { $sum: 1 } }}
   ]);
+
   if(query.length > 0){
       var id = String(query[0].count + 1).padStart(4, '0'); 
       var reff = head+'/'+id;
   }else{
       var reff = head+'/0001';
   }
+  console.log('reff =>',reff)
   await mongoose.connection.close();
   return reff;
 }
@@ -533,4 +608,98 @@ function getEmployee(data) {
           reject(process.env.ERRORINTERNAL_RESPONSE);
       }
   })
+}
+
+async function updateUltisend (data) {
+  return new Promise(async function (resolve, reject) {
+    try {
+      let buff = new Buffer(data.secretKey, 'base64');
+      let text = buff.toString('ascii');
+      var arr_text = text.split(":");
+      var orderId = arr_text[0]
+
+      var request = require('request');
+      var options = {
+        'method': 'PUT',
+        'url': 'http://192.168.0.99:5000/api/v1/fo/brandOutlet/order/delivery/'+orderId,
+        'headers': {
+          // 'Authorization': 'NjpNZWxDOjYyODc4NTIyNDAyMDk='
+          'Authorization': data.secretKey
+        },
+        formData: {
+          'courierPhoto': data.courierPhoto,
+          'courierName': data.courierName,
+          'courierPhoneNumber': data.courierPhoneNumber,
+          'courierVehicleInfo': data.courierVehicleInfo,
+          'status': data.status
+        }
+      };
+      request(options, function (error, response) {
+        if (error) throw new Error(error);
+        console.log(response.body);
+        resolve(response.body);
+      });
+    } catch (e) {
+      console.log('Error updateUltisend => ', e)
+      reject(process.env.ERRORINTERNAL_RESPONSE);
+  }
+})
+}      
+
+async function sendNotif (data) {
+  return new Promise(async function (resolve, reject) {
+    try {  
+      let appID = process.env.NOTIF_APP_ID;
+      let restKey = process.env.NOTIF_REST_KEY;
+      let contentMessage = {
+          'app_id': appID,
+          'contents': {
+              en: data.messageNotif
+          },
+          'included_segments': [
+              'Subscribed Users'
+          ],
+          // 'include_external_user_ids': [
+          //     'dedf6105-c86a-40bd-b2c1-37a5af2cdd87'
+          // ],        
+          // 'include_external_user_ids': [
+          //     data.extId
+          // ],    
+          // 'data': {
+          //     'transactionCode': data.orderCode,
+          //     'outletId': 1,
+          //     'outletName': data.merchantName,
+          //     'amount': 500,
+          //     'img': "https://anekakeripikmalang.com/wp-content/uploads/2012/11/cara-menghilangkan-rasa-gatal-pada-umbi-talas.jpg"
+          // }
+      };
+      console.log('contentMessage =>', contentMessage);
+      await request.post({
+          "headers": {
+              "authorization": "Basic " + restKey,
+              "content-type": "application/json"
+          },
+          "url": "https://onesignal.com/api/v1/notifications",
+          "body": JSON.stringify(contentMessage)
+      }, (error, response, body) => {
+          if (error) {
+              console.log('error send notif', error)
+              return error
+          } else {
+              console.log('send push notif', body);
+              var result = JSON.parse(body);
+              // let dataProfile = basket;
+              var message = {
+                  "responseCode": process.env.SUCCESS_RESPONSE,
+                  "responseMessage": "Transaction Submitted",
+                  // "data": dataProfile
+              };
+              resolve(message);
+          }
+      });      
+  } catch (e) {
+    console.log('Error updateUltisend => ', e)
+    reject(process.env.ERRORINTERNAL_RESPONSE);
+  }
+})
 }

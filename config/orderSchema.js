@@ -67,6 +67,11 @@ const templateSchema = new Schema({
         type: String,
         required: true
     },
+    secretKey: {
+        type: String,
+        required: true
+        //example : orderId:receiverName:receiverPhone
+    },
     userCreated: {
         type: String,
         required: true
