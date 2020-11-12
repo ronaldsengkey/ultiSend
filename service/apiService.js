@@ -51,7 +51,7 @@ exports.getOrder = function (data) {
       });
       let query = await orderSchema.find(param).populate('assignId');
       await mongoose.connection.close();
-      console.log("query::", query[0].assignId["_id"]);
+      // console.log("query::", query[0].assignId["_id"]);
       if (query.length > 0) {
           res.responseCode = process.env.SUCCESS_RESPONSE;
           res.responseMessage = "Success";
@@ -79,7 +79,7 @@ exports.postDriver = function (data) {
   return new Promise(async function (resolve, reject) {
     let res = {};
     try {
-      var cd = await checkDriver(data);
+      var cd = await checkDriver({"driverId": data.driverId});
       if(cd.length>0){
           res.responseCode = process.env.FAILED_RESPONSE;
           res.responseMessage = "Failed driver created";
@@ -104,6 +104,59 @@ exports.postDriver = function (data) {
             res.responseCode = process.env.FAILED_RESPONSE;
             res.responseMessage = "Failed driver order";
         }
+      }
+      resolve(res);
+
+    } catch (err) {
+        console.log('Error for create order ==> ', err)
+        res = {
+            'responseCode': process.env.ERRORINTERNAL_RESPONSE,
+            'responseMessage': 'Internal server error'
+        }
+        resolve(res);
+    }    
+  });
+}
+
+exports.putDriver = function (data) {
+  console.log('postDriver =>',data)
+  return new Promise(async function (resolve, reject) {
+    let res = {};
+    try {
+      if(data._id){
+        var cd = await checkDriver({"_id": data._id});
+      }else{
+        var cd = await checkDriver({"driverEmail": data.driverEmail, "driverPhone": data.driverPhone});
+      }
+      if(cd.length>0){
+        await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
+
+        let vName = {}, vPhone = {}, vAddress = {}, vEmail = {}, vVehicleInfo = {}, vStatus = {} , vExtId = {};  
+        if (data.driverName) { vName = {'driverName': data.driverName} }
+        if (data.driverPhone) { vPhone = {'driverPhone': data.driverPhone} }
+        if (data.driverAddress) { vAddress = {'driverAddress': data.driverAddress} }
+        if (data.driverEmail) { vEmail = {'driverEmail': data.driverEmail} }
+        if (data.driverVehicleInfo) { vVehicleInfo = {'driverVehicleInfo': data.driverVehicleInfo} }
+        if (data.driverStatus) { vStatus = {'driverStatus': data.driverStatus} }
+        if (data.extId) { vExtId = {'extId': data.extId} }
+
+        var value = extend({}, vName, vPhone, vAddress, vVehicleInfo, vEmail, vStatus, vExtId);
+        let na= await driverSchema.findOneAndUpdate({"_id": cd[0]._id}, {
+            $set: value
+        }, {
+            useFindAndModify: false
+        });
+        await mongoose.connection.close();
+        if (na) {
+            res.responseCode = process.env.SUCCESS_RESPONSE;
+            res.responseMessage = "Driver updated";
+        } else {
+            res.responseCode = process.env.FAILED_RESPONSE;
+            res.responseMessage = "Failed driver update";
+        }
+      }else{
+        res.responseCode = process.env.FAILED_RESPONSE;
+        res.responseMessage = "Failed driver update";
       }
       resolve(res);
 
@@ -255,8 +308,20 @@ exports.putOrder = function (data) {
         ds.messageNotif=messageNotif;
         ds.orderCode = query[0].orderCode;
         ds.merchantName = query[0].merchantName;
+        ds.merchantAddress = query[0].merchantAddress;
+        ds.receiverName = query[0].receiverName;
+        ds.receiverAddress = query[0].receiverAddress;
+        ds.receiverPhone = query[0].receiverPhone;
 
-        await sendNotif(ds);
+        await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
+        var ols = await orderLogSchema.find({"orderId": query[0]._id}).populate('driverId');
+        await mongoose.connection.close();
+        if(ols.length>0) {
+          ds.extId=ols[0].driverId.extId;
+          if(ds.extId) {
+            await sendNotif(ds);
+          }
+        }
 
         console.log('messageNotif =>',messageNotif)
         if (na) {
@@ -563,9 +628,9 @@ async function checkLog (data){
   await mongoose.connection.close();
   return query;
 }
-async function checkDriver (data){
+async function checkDriver (param){
   await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true });
-  let query = await driverSchema.find({"driverId": data.driverId});
+  let query = await driverSchema.find(param);
   await mongoose.connection.close();
   return query;
 }
@@ -656,22 +721,20 @@ async function sendNotif (data) {
           'contents': {
               en: data.messageNotif
           },
-          'included_segments': [
-              'Subscribed Users'
-          ],
-          // 'include_external_user_ids': [
-          //     'dedf6105-c86a-40bd-b2c1-37a5af2cdd87'
-          // ],        
-          // 'include_external_user_ids': [
-          //     data.extId
-          // ],    
-          // 'data': {
-          //     'transactionCode': data.orderCode,
-          //     'outletId': 1,
-          //     'outletName': data.merchantName,
-          //     'amount': 500,
-          //     'img': "https://anekakeripikmalang.com/wp-content/uploads/2012/11/cara-menghilangkan-rasa-gatal-pada-umbi-talas.jpg"
-          // }
+          // 'included_segments': [
+          //     'Subscribed Users'
+          // ],
+          'include_external_user_ids': [
+              data.extId
+          ],    
+          'data': {
+            'orderCode': data.orderCode,
+            'merchantName': data.merchantName,
+            'merchantAddress': data.merchantAddress,
+            'receiverName': data.receiverName,
+            'receiverAddress': data.receiverAddress
+        }
+
       };
       console.log('contentMessage =>', contentMessage);
       await request.post({

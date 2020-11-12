@@ -31,6 +31,10 @@ const templateSchema = new Schema({
         type: String,
         required: false
     },
+    extId: {
+        type: String,
+        required: false
+    },    
     driverImage: {
         type: String,
         required: false

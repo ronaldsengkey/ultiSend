@@ -7,9 +7,13 @@ const templateSchema = new Schema({
         type: String,
         required: true
     },
+    // driverId: {
+    //     type: String,
+    //     required: true
+    // },
     driverId: {
-        type: String,
-        required: true
+        type: Schema.Types.ObjectId,
+        ref: 'driver'
     },
     responseNotes: {
         type: String,

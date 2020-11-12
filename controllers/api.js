@@ -838,6 +838,79 @@ module.exports.getDriver = async function getDriver(req, res, next) {
   }
 };
 
+module.exports.putDriver = async function putDriver(req, res, next) {
+  var signature = req.swagger.params["signature"].value;
+  var version = req.swagger.params["v"].value;
+  var token = req.swagger.params["token"].value;
+  var data = req.swagger.params["body"].value;
+  let serviceCode = req.swagger.params["apiService"].value;
+
+  if (checking.isValidService(serviceCode)) {
+    console.log('putDriver =>',data)
+    let response = await apiService.putDriver(data);
+    return utils.writeJson(res, response);
+  }
+
+  isValid = new validator(signature, token);
+
+  // let result = false;
+  // let keys = Object.keys(data);
+  // for (let key of keys) {
+  //   data[key] = await asym.decrypterRsa(data[key]);
+  //   if (!data[key]) {
+  //     result = {
+  //         responseCode: process.env.NOTACCEPT_RESPONSE,
+  //         responseMessage: "Unable to read " + key,
+  //     };
+  //     break;
+  //   }
+  // }
+  
+  // if (result) {
+  //     utils.writeJson(res, result);
+  //     return;
+  // }
+
+  if (!data.driverPhone) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "driverPhone is required",
+      });
+      return;
+  }
+  if (!data.driverEmail) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "driverEmail is required",
+      });
+      return;
+  }
+
+  switch (version) {
+    case 2:
+      break;
+    default:
+      // call signature validator
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
+        apiService
+          .putDriver(data)
+          .then(function (response) {
+            utils.writeJson(res, response);
+          })
+          .catch(function (response) {
+            utils.writeJson(res, response);
+          });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
+      }
+      break;
+  }
+};
+
 module.exports.getDriverOld = async function getDriverOld(req, res, next) {
   var token = req.swagger.params["token"].value;
   var signature = req.swagger.params["signature"].value;

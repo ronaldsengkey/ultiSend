@@ -2,6 +2,7 @@
 
 const request = require('request');
 let message = {};
+const serviceJson = require('../service.json');
 
 exports.checkToken = function (token) {
   return new Promise(async function (resolve, reject) {
@@ -97,4 +98,17 @@ exports.checkSecretKey = function (secretKey) {
       resolve(result);
     });
   })
+}
+exports.isValidService = function (code){
+  console.log("code: ", code);
+  console.log("service: ", serviceJson);
+  let result = false;
+  for(let service of serviceJson){
+    if (service.code == code) {
+      result = service.name;
+      break;
+    }
+  }
+  console.log("result: ", result);
+  return result;
 }
