@@ -684,6 +684,7 @@ paths:
       produces:
         - "application/xml"
         - "application/json"
+        - "multipart/form-data"
       parameters:
         - name: "signature"
           in: "header"
@@ -706,11 +707,59 @@ paths:
           description: "destiny service"
           required: false
           type: "string"
-        - in: "body"
-          name: "body"
+        - name: "email"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "password"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "fullName"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "company"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "deviceId"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "phoneCode"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "phone"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "photo"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "cardImage"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "id_number"
+          in: "formData"
+          type: "string"
+          required: false 
+        - name: "vehicleInfo"
+          in: "formData"
+          type: "string"
           required: false
-          schema:
-            $ref: "#/definitions/accountPostInquiry"
+        - name: "company_profile_id"
+          in: "formData"
+          type: "string"
+          required: false
+        # - in: "body"
+        #   name: "body"
+        #   required: false
+        #   schema:
+        #     $ref: "#/definitions/accountPostInquiry"
       responses:
         "200":
           description: "Account post response"
@@ -846,14 +895,12 @@ paths:
           in: "header"
           description: "user token"
           required: true
-          type: "string"          
+          type: "string" 
         - in: "body"
           name: "body"
           required: true
           schema:
             $ref: "#/definitions/driverInquiry"
-
-
       responses:
         "200":
           description: "Account post response"

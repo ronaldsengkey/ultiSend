@@ -44,6 +44,10 @@ const templateSchema = new Schema({
         required: false
         // on/off
     },
+    cardImage: {
+        type: String,
+        required: false,
+    },
     createdDate: {
         type: Date,
         default: Date.now

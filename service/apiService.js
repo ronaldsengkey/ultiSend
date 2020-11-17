@@ -75,7 +75,7 @@ exports.getOrder = function (data) {
 }
 
 exports.postDriver = function (data) {
-  console.log('postDriver =>',data)
+  // console.log('postDriver =>',data)
   return new Promise(async function (resolve, reject) {
     let res = {};
     try {
@@ -91,11 +91,30 @@ exports.postDriver = function (data) {
             driverPhone: data.driverPhone,
             driverAddress: data.driverAddress,
             driverEmail: data.driverEmail,
-            driverImage: data.driverImage,
             driverVehicleInfo: data.driverVehicleInfo,
             driverStatus: 'off',
         });
         let na = await newApi.save();
+        let filter = {
+          driverId: data.driverId
+        }
+        let update = {};
+        if (data.driverImage) {
+          update = {
+            driverImage: data.driverImage
+          }
+          mongoose.set('debug', false);
+          await driverSchema.findOneAndUpdate(filter, update);
+          mongoose.set('debug', true);
+        }
+        if (data.cardImage) {
+          update = {
+            cardImage: data.cardImage
+          }
+          mongoose.set('debug', false);
+          await driverSchema.findOneAndUpdate(filter, update);
+          mongoose.set('debug', true);
+        }
         await mongoose.connection.close();
         if (na) {
             res.responseCode = process.env.SUCCESS_RESPONSE;
@@ -386,16 +405,6 @@ exports.assignOrderUpdate = function (data) {
           }
   
           if (na) {
-            // insert log
-            let newApi = new orderLogSchema({
-              orderId: data.orderId,
-              driverId: data.driverId,
-              responseNotes: data.responseNotes,
-              status: data.status,
-              userCreated: data.userCreated,
-            });
-            await newApi.save();
-
             let query = await driverSchema.find({"driverId": data.driverId});
             console.log('driverSchema =>',query.length)
             if(query.length >0){
@@ -409,6 +418,17 @@ exports.assignOrderUpdate = function (data) {
               ds.secretKey=na.secretKey;
               var uu = await updateUltisend(ds)
               console.log('updateUltisend =>',uu)  
+
+              // insert log
+              let newApi = new orderLogSchema({
+                orderId: data.orderId,
+                // driverId: data.driverId, // error, change objId
+                driverId: query[0]._id,
+                responseNotes: data.responseNotes,
+                status: data.status,
+                userCreated: data.userCreated,
+              });
+              await newApi.save();
             }
   
             res.responseCode = process.env.SUCCESS_RESPONSE;
@@ -686,7 +706,7 @@ async function updateUltisend (data) {
       var request = require('request');
       var options = {
         'method': 'PUT',
-        'url': 'http://192.168.0.99:5000/api/v1/fo/brandOutlet/order/delivery/'+orderId,
+        'url': process.env.ULTIMEAL_HOST + '/api/v1/fo/brandOutlet/order/delivery/'+orderId,
         'headers': {
           // 'Authorization': 'NjpNZWxDOjYyODc4NTIyNDAyMDk='
           'Authorization': data.secretKey
