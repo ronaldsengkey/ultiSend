@@ -71,14 +71,17 @@ class Validator {
         let keys = Object.keys(data);
         for (let key of keys) {
             //   data[key] = asim.decryptAes(data[key]);
-            console.log(key, "::", data[key]);
-            data[key] = await asym.decrypterRsa(data[key]);
-            console.log(key, "::", data[key]);
+            let ex = ['photo', 'cardImage']
+            // console.log(key, "::", data[key].substring(0, 10));
+            if (!ex.includes(key)) {
+                data[key] = await asym.decrypterRsa(data[key]);   
+            }
+            // console.log(key, "::", data[key].substring(0, 10));
             if (data[key] === false) {
                 return false;
             }
         }
-        console.log("data::", data);
+        // console.log("data::", data);
         return data
     }
 }

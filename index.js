@@ -39,7 +39,7 @@ swaggerTools.initializeMiddleware(swaggerDoc, async function (middleware) {
 
   app.use(
     bodyParser.json({
-      limit: "2mb",
+      limit: "50mb",
     })
   );
   
@@ -47,7 +47,7 @@ swaggerTools.initializeMiddleware(swaggerDoc, async function (middleware) {
   
   app.use(
     bodyParser.urlencoded({
-      limit: "2mb",
+      limit: "50mb",
       extended: true,
       parameterLimit: 2000,
     })

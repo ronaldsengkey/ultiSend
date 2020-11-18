@@ -9,6 +9,7 @@ var arrStatus = ['Pending', 'Assigned', 'Pickup', 'Delivering', 'Delivered', 'Ca
 var arrService = ['sameDay', 'priority'];
 const validator = require('../class/validator');
 const accountService = require('../service/accountService');
+const backendService = require('../service/backendService');
 const checking = require('../controllers/check');
 
 const driverDivisionId = '9'; //division id driver from postgreq
@@ -20,19 +21,32 @@ module.exports.accountPost = async function accountPost(req, res, next) {
   var version = req.swagger.params["v"].value;
   var token = req.swagger.params["token"].value;
   var flowEntry = req.swagger.params["flowEntry"].value;
-  var data = req.swagger.params["body"].value;
+  // var data = req.swagger.params["body"].value;
+  let photo = req.swagger.params["photo"].value;
+  let cardImage = req.swagger.params["cardImage"].value;
+  let data = {
+    email: req.swagger.params["email"].value,
+    password: req.swagger.params["password"].value,
+    fullName: req.swagger.params["fullName"].value,
+    company: req.swagger.params["company"].value,
+    deviceId: req.swagger.params["deviceId"].value,
+    phoneCode: req.swagger.params["phoneCode"].value,
+    phone: req.swagger.params["phone"].value,
+    id_number: req.swagger.params["id_number"].value,
+    vehicleInfo: req.swagger.params["vehicleInfo"].value,
+    company_profile_id: req.swagger.params["company_profile_id"].value
+  }
 
   isValid = new validator(signature, token);
 
   data = await isValid.decryptObjectData(data);
-  console.log("data::", data);
+  // console.log("data::", data);
   if (!data) {
     return utils.writeJson(res, {
       responseCode: 406,
       responseMessage: "Unable to read data"
     })
   }
-
   switch (version) {
     case 2:
       break;
@@ -86,13 +100,31 @@ module.exports.accountPost = async function accountPost(req, res, next) {
           return utils.writeJson(res, userData);
         }
         body = {
+          ownerId: userData.data[0].employee_id,
+          scope: 'profile',
+          behalf: 'ultisend',
+          file: photo
+        }
+        photo = await backendService.uploadFile(body);
+        console.log("photo::", photo);
+        body = {
+          ownerId: userData.data[0].employee_id,
+          scope: 'cardImage',
+          behalf: 'ultisend',
+          file: cardImage
+        }
+        cardImage = await backendService.uploadFile(body);
+        console.log("cardImage::", cardImage);
+        
+        body = {
           "driverId": userData.data[0].employee_id,
           "driverName": userData.data[0].employee_name,
           "driverPhone": userData.data[0].employee_phone,
           "driverAddress": userData.data[0].employee_address,
           "driverEmail": userData.data[0].employee_email,
           "driverVehicleInfo": dataTemp.data[0].vehicleInfo,
-          "driverImage": userData.data[0].employee_profile_img,
+          "driverImage": photo.data[0].path,
+          "cardImage": cardImage.data[0].path,
           "driverStatus": 'off'
         }
         // console.log("body::", body);
