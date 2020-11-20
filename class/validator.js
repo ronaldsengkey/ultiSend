@@ -1,15 +1,17 @@
 const request = require('request');
 const crypto = require('crypto');
 const efs = require("fs");
-const configV1 = JSON.parse(efs.readFileSync("./configV1.json", "utf-8"));
+// const configV1 = JSON.parse(efs.readFileSync("./configV1.json", "utf-8"));
+const configV1 = require('../configV1');
 const asym = require('../config/asymmetric');
 
 class Validator {
-    constructor(signature, token) {
+    constructor(signature, token, authorization) {
         console.log("new validator::", signature, token);
         this.signature = signature;
         this.token = token;
         this.appId = false;
+        this.authorization = authorization;
     }
     async checkToken() {
         // console.log("This is token validator " + this.token);
@@ -20,9 +22,11 @@ class Validator {
             'url': url,
             'headers': {
                 'token': this.token,
-                'signature': this.signature
+                'signature': this.signature,
+                'Authorization': this.authorization,
             }
         }
+        console.log("options::", options);
         let result = await sentRequest(options);
         if (result.responseCode == process.env.SUCCESS_RESPONSE) {
             return true;
@@ -41,8 +45,9 @@ class Validator {
             "method": "POST",
             "url": svUrl
         }
+        console.log("options::", options);
         let result = await sentRequest(options);
-        // console.log("result::", result);
+        console.log("result::", result);
         if (result.responseCode == process.env.SUCCESS_RESPONSE) {
             this.appId = result.data.appId;
             // console.log("this.appId::", this.appId);
@@ -61,7 +66,7 @@ class Validator {
         let data = JSON.parse(decrypted + decipher.final('utf8'));
         var options = {
             'method': 'GET',
-            'url': configV1.service.users + '/' + data.customerId,
+            'url': AUTH_SERVICE_HOST + '/users/' + data.customerId,
             'headers': {
             }
         };

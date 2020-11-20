@@ -526,6 +526,10 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "authorization"
+          in: "header"  
+          required: true
+          type: "string"
         - name: "signature"
           in: "header"
           required: true

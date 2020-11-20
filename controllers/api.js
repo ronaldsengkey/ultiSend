@@ -148,11 +148,12 @@ module.exports.accountGet = async function accountGet(req, res){
   var token = req.swagger.params["token"].value;
   let clientKey = req.swagger.params['clientKey'].value;
   let category = req.swagger.params['category'].value;
+  let authorization = req.swagger.params['authorization'].value;
   let flowEntry = req.swagger.params['flowEntry'].value;
   let body = {};
   // var data = req.swagger.params["body"].value;
 
-  isValid = new validator(signature, token);
+  isValid = new validator(signature, token, authorization);
   if (await isValid.checkSignature() && await isValid.checkToken()) {
     let data = await isValid.getData();
     data = await accountService.getData(data);
