@@ -66,7 +66,7 @@ class Validator {
         let data = JSON.parse(decrypted + decipher.final('utf8'));
         var options = {
             'method': 'GET',
-            'url': AUTH_SERVICE_HOST + '/users/' + data.customerId,
+            'url': process.env.AUTH_SERVICE_HOST + '/users/' + data.customerId,
             'headers': {
             }
         };
