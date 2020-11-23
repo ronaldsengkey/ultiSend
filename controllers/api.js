@@ -33,8 +33,7 @@ module.exports.accountPost = async function accountPost(req, res, next) {
     phoneCode: req.swagger.params["phoneCode"].value,
     phone: req.swagger.params["phone"].value,
     id_number: req.swagger.params["id_number"].value,
-    vehicleInfo: req.swagger.params["vehicleInfo"].value,
-    company_profile_id: req.swagger.params["company_profile_id"].value
+    vehicleInfo: req.swagger.params["vehicleInfo"].value
   }
 
   isValid = new validator(signature, token);
@@ -63,9 +62,10 @@ module.exports.accountPost = async function accountPost(req, res, next) {
         data.accountPriority = "employee";
         data.appId = isValid.appId;
         data.userType = "ultisend";
-        // console.log("data::", data);
+        data.company_profile_id = data.company;
+        console.log("data::", data);
         let regis = await accountService.register(data);
-        // console.log("regis::", regis);
+        console.log("regis::", regis);
         if (regis.responseCode != process.env.SUCCESS_RESPONSE) {
           return utils.writeJson(res, regis);  
         }
@@ -76,9 +76,10 @@ module.exports.accountPost = async function accountPost(req, res, next) {
           'confirmationStatus': '0',
           'company_profile_id': data.company,
           'division_id': driverDivisionId,
-        } 
+        }
+        console.log("body::", body);
         let dataTemp = await accountService.getDataTemp(body);
-        // console.log("dataTemp::", dataTemp);
+        console.log("dataTemp::", dataTemp);
         if (dataTemp.responseCode != process.env.SUCCESS_RESPONSE) {
           return utils.writeJson(res, dataTemp);
         }
@@ -90,12 +91,12 @@ module.exports.accountPost = async function accountPost(req, res, next) {
           'category': "confirm",
         };
         let dataConfirm = await accountService.confirmDataEmployee(body);
-        // console.log("dataConfirm::", dataConfirm);
+        console.log("dataConfirm::", dataConfirm);
         if (dataConfirm.responseCode != process.env.SUCCESS_RESPONSE) {
           return utils.writeJson(res, dataConfirm);
         }
         let userData = await accountService.getData(body);
-        // console.log("userData::", userData);
+        console.log("userData::", userData);
         if (userData.responseCode != process.env.SUCCESS_RESPONSE) {
           return utils.writeJson(res, userData);
         }
@@ -170,6 +171,7 @@ module.exports.accountGet = async function accountGet(req, res){
       data = await accountService.getDataTemp(body);
     }
     if (data.data && flowEntry == 'ultisend') {
+      console.log("data::", data);
       data.data = await asym.encryptArrayObjectRsa(data.data, clientKey); 
     }
     utils.writeJson(res, data);  
