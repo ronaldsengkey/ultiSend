@@ -685,6 +685,8 @@ paths:
       summary: "order request"
       description: "Order request from"
       operationId: "accountPost"
+      consumes:
+        - "multipart/form-data"
       produces:
         - "application/xml"
         - "application/json"
@@ -1014,6 +1016,257 @@ paths:
                 description: unauthorize.
       x-swagger-router-controller: "api"
 
+  /api/priority:
+    get:
+      tags:
+        - "api"
+      summary: "get priority time request"
+      description: "Priority time request from others app"
+      operationId: "getPriority"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
+    post:
+      tags:
+        - "api"
+      summary: "priority time request"
+      description: "Priority time request from"
+      operationId: "createPriority"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+          collectionFormat: "multi"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/priorityInquiry"
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
+    put:
+      tags:
+        - "api"
+      summary: "priority time update"
+      description: "Priority time update from"
+      operationId: "updatePriority"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+          collectionFormat: "multi"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/updatePriorityInquiry"
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
+    delete:
+      tags:
+        - "api"
+      summary: "priority time delete"
+      description: "Priority time delete from"
+      operationId: "deletePriority"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+          collectionFormat: "multi"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/deletePriorityInquiry"
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
   /api/cronDriver:
     post:
       tags:
@@ -1183,7 +1436,37 @@ definitions:
         type: "string"
         example: "pending, ready"
 
+  priorityInquiry:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        example: "Pagi"
+      time:
+        type: "string"
+        example: "09:00"
 
+  updatePriorityInquiry:
+    type: "object"
+    properties:
+      _id:
+        type: "string"
+        example: "5fb7684fedb7ca6ea4479d78"    
+      name:
+        type: "string"
+        example: "Pagi"
+      time:
+        type: "string"
+        example: "09:00"
+
+  deletePriorityInquiry:
+    type: "object"
+    properties:
+      _id:
+        type: "string"
+        example: "5fb7684fedb7ca6ea4479d78"    
+
+        
   ApiResponse:
     type: "object"
     properties:

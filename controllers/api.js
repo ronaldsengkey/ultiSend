@@ -996,3 +996,164 @@ module.exports.getDriverOld = async function getDriverOld(req, res, next) {
       break;
   }
 };
+
+module.exports.createPriority = async function createPriority(req, res, next) {
+  var signature = req.swagger.params["signature"].value;
+  var version = req.swagger.params["v"].value;
+  var data = req.swagger.params["body"].value;
+
+  if (!data.name) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "name is required",
+      });
+      return;
+  }
+  if (!data.time) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "time is required",
+      });
+      return;
+  }
+  switch (version) {
+    case 2:
+      break;
+    default:
+
+      let cs = await checking.checkSignature(signature);
+      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+        apiService
+          .createPriority(data)
+          .then(function (response) {
+            utils.writeJson(res, response);
+          })
+          .catch(function (response) {
+            utils.writeJson(res, response);
+          });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
+      }
+      break;
+  }
+};
+module.exports.updatePriority = async function updatePriority(req, res, next) {
+  var signature = req.swagger.params["signature"].value;
+  var version = req.swagger.params["v"].value;
+  var data = req.swagger.params["body"].value;
+
+  if (!data._id) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "_id is required",
+      });
+      return;
+  }
+  if (!data.name) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "name is required",
+      });
+      return;
+  }
+  if (!data.time) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "time is required",
+      });
+      return;
+  }
+  switch (version) {
+    case 2:
+      break;
+    default:
+
+      let cs = await checking.checkSignature(signature);
+      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+        apiService
+          .updatePriority(data)
+          .then(function (response) {
+            utils.writeJson(res, response);
+          })
+          .catch(function (response) {
+            utils.writeJson(res, response);
+          });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
+      }
+      break;
+  }
+};
+module.exports.deletePriority = async function deletePriority(req, res, next) {
+  var signature = req.swagger.params["signature"].value;
+  var version = req.swagger.params["v"].value;
+  var data = req.swagger.params["body"].value;
+
+  if (!data._id) {
+      utils.writeJson(res, {
+          responseCode: process.env.WRONGINPUT_RESPONSE,
+          responseMessage: "_id is required",
+      });
+      return;
+  }
+  switch (version) {
+    case 2:
+      break;
+    default:
+
+      let cs = await checking.checkSignature(signature);
+      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+        apiService
+          .deletePriority(data)
+          .then(function (response) {
+            utils.writeJson(res, response);
+          })
+          .catch(function (response) {
+            utils.writeJson(res, response);
+          });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
+      }
+      break;
+  }
+};
+module.exports.getPriority = async function getPriority(req, res, next) {
+  var signature = req.swagger.params["signature"].value;
+  var param = {}
+  var version = 1;
+  switch (version) {
+    case 2:
+      break;
+    default:
+      let cs = await checking.checkSignature(signature);
+      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+        apiService
+          .getPriority(param)
+          .then(async function (response) {
+            utils.writeJson(res, response);
+          })
+          .catch(function (response) {
+            utils.writeJson(res, response);
+          });
+      }
+      else{
+        utils.writeJson(res, {
+          responseCode: 401,
+          responseMessage: "Unauthorize"
+        });
+      }
+      break;
+  }
+};

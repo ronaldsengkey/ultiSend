@@ -43,8 +43,6 @@ swaggerTools.initializeMiddleware(swaggerDoc, async function (middleware) {
     })
   );
   
-  // app.use(helmet());
-  
   app.use(
     bodyParser.urlencoded({
       limit: "50mb",

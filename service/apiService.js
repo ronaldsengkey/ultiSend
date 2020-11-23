@@ -4,6 +4,7 @@ var mongoConf = require('../config/mongo');
 var orderSchema = require('../config/orderSchema');
 var orderLogSchema = require('../config/orderLogSchema');
 var driverSchema = require('../config/driverSchema');
+var prioritySchema = require('../config/prioritySchema');
 var FormData = require('form-data');
 var fs = require('fs');
 
@@ -406,7 +407,7 @@ exports.assignOrderUpdate = function (data) {
   
           if (na) {
             let query = await driverSchema.find({"driverId": data.driverId});
-            console.log('driverSchema =>',query.length)
+            console.log('driverSchema =>',query[0]._id)
             if(query.length >0){
               var ds = {};
               ds.courierPhoto = query[0].driverImage;
@@ -708,7 +709,6 @@ async function updateUltisend (data) {
         'method': 'PUT',
         'url': process.env.ULTIMEAL_HOST + '/api/v1/fo/brandOutlet/order/delivery/'+orderId,
         'headers': {
-          // 'Authorization': 'NjpNZWxDOjYyODc4NTIyNDAyMDk='
           'Authorization': data.secretKey
         },
         formData: {
@@ -785,4 +785,123 @@ async function sendNotif (data) {
     reject(process.env.ERRORINTERNAL_RESPONSE);
   }
 })
+}
+
+exports.createPriority = function (data) {
+  return new Promise(async function (resolve, reject) {
+    let res = {};
+    try {
+      await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
+      let newApi = new prioritySchema({
+          name: data.name,
+          time: data.time,
+      });
+      let na = await newApi.save();
+      // let na = {};
+      await mongoose.connection.close();
+      if (na) {
+          res.responseCode = process.env.SUCCESS_RESPONSE;
+          res.responseMessage = "New priority time created";
+      } else {
+          res.responseCode = process.env.FAILED_RESPONSE;
+          res.responseMessage = "Failed create priority time";
+      }
+      resolve(res);
+
+    } catch (err) {
+        console.log('Error for create priority time  ==> ', err)
+        res = {
+            'responseCode': process.env.ERRORINTERNAL_RESPONSE,
+            'responseMessage': 'Internal server error'
+        }
+        resolve(res);
+    }    
+  });
+}
+exports.updatePriority = function (data) {
+  return new Promise(async function (resolve, reject) {
+    let res = {};
+    try {
+      await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
+      let na= await prioritySchema.findOneAndUpdate({"_id": data._id}, {
+          $set: {name: data.name,time: data.time,}
+      }, {
+          useFindAndModify: false
+      });
+
+      await mongoose.connection.close();
+      if (na) {
+          res.responseCode = process.env.SUCCESS_RESPONSE;
+          res.responseMessage = "Priority time updated";
+      } else {
+          res.responseCode = process.env.FAILED_RESPONSE;
+          res.responseMessage = "Failed update priority time";
+      }
+      resolve(res);
+
+    } catch (err) {
+        console.log('Error for update priority time  ==> ', err)
+        res = {
+            'responseCode': process.env.ERRORINTERNAL_RESPONSE,
+            'responseMessage': 'Internal server error'
+        }
+        resolve(res);
+    }    
+  });
+}
+exports.deletePriority = function (data) {
+  return new Promise(async function (resolve, reject) {
+    let res = {};
+    try {
+      await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
+      let na= await prioritySchema.deleteMany({"_id": data._id});
+
+      await mongoose.connection.close();
+      if (na) {
+          res.responseCode = process.env.SUCCESS_RESPONSE;
+          res.responseMessage = "Priority time deleted";
+      } else {
+          res.responseCode = process.env.FAILED_RESPONSE;
+          res.responseMessage = "Failed delete priority time";
+      }
+      resolve(res);
+
+    } catch (err) {
+        console.log('Error for delete priority time  ==> ', err)
+        res = {
+            'responseCode': process.env.ERRORINTERNAL_RESPONSE,
+            'responseMessage': 'Internal server error'
+        }
+        resolve(res);
+    }    
+  });
+}
+exports.getPriority = function (data) {
+  return new Promise(async function (resolve, reject) {
+    let res = {};
+    try {
+      await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
+      let query = await prioritySchema.find({});
+      await mongoose.connection.close();
+
+      if (query.length > 0) {
+          res.responseCode = process.env.SUCCESS_RESPONSE;
+          res.responseMessage = "Success";
+          res.data = query;
+      } else {
+          res.responseCode = process.env.NOTFOUND_RESPONSE;
+          res.responseMessage = "Data not found";
+      }
+      resolve(res)      
+    } catch (err) {
+      console.log('Error for get priority ==> ', err)
+      res = {
+          'responseCode': process.env.ERRORINTERNAL_RESPONSE,
+          'responseMessage': 'Internal server error'
+      }
+      resolve(res);
+
+  }      
+    // resolve();
+  });
 }
