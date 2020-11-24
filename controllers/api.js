@@ -1001,6 +1001,8 @@ module.exports.createPriority = async function createPriority(req, res, next) {
   var signature = req.swagger.params["signature"].value;
   var version = req.swagger.params["v"].value;
   var data = req.swagger.params["body"].value;
+  var token = req.swagger.params["token"].value;
+  isValid = new validator(signature, token);
 
   if (!data.name) {
       utils.writeJson(res, {
@@ -1030,8 +1032,7 @@ module.exports.createPriority = async function createPriority(req, res, next) {
       break;
     default:
 
-      let cs = await checking.checkSignature(signature);
-      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+      if (await isValid.checkSignature() && await isValid.checkToken()) {    
         apiService
           .createPriority(data)
           .then(function (response) {
@@ -1054,7 +1055,8 @@ module.exports.updatePriority = async function updatePriority(req, res, next) {
   var signature = req.swagger.params["signature"].value;
   var version = req.swagger.params["v"].value;
   var data = req.swagger.params["body"].value;
-
+  var token = req.swagger.params["token"].value;
+  isValid = new validator(signature, token);
   if (!data._id) {
       utils.writeJson(res, {
           responseCode: process.env.WRONGINPUT_RESPONSE,
@@ -1090,8 +1092,7 @@ module.exports.updatePriority = async function updatePriority(req, res, next) {
       break;
     default:
 
-      let cs = await checking.checkSignature(signature);
-      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+      if (await isValid.checkSignature() && await isValid.checkToken()) {    
         apiService
           .updatePriority(data)
           .then(function (response) {
@@ -1114,7 +1115,8 @@ module.exports.deletePriority = async function deletePriority(req, res, next) {
   var signature = req.swagger.params["signature"].value;
   var version = req.swagger.params["v"].value;
   var data = req.swagger.params["body"].value;
-
+  var token = req.swagger.params["token"].value;
+  isValid = new validator(signature, token);
   if (!data._id) {
       utils.writeJson(res, {
           responseCode: process.env.WRONGINPUT_RESPONSE,
@@ -1135,9 +1137,7 @@ module.exports.deletePriority = async function deletePriority(req, res, next) {
     case 2:
       break;
     default:
-
-      let cs = await checking.checkSignature(signature);
-      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+      if (await isValid.checkSignature() && await isValid.checkToken()) {    
         apiService
           .deletePriority(data)
           .then(function (response) {
