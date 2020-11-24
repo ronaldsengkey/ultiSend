@@ -1016,6 +1016,15 @@ module.exports.createPriority = async function createPriority(req, res, next) {
       });
       return;
   }
+
+  data = await isValid.decryptObjectData(data);
+  if (!data) {
+    return utils.writeJson(res, {
+      responseCode: 406,
+      responseMessage: "Unable to read data"
+    })
+  }
+
   switch (version) {
     case 2:
       break;
@@ -1067,6 +1076,15 @@ module.exports.updatePriority = async function updatePriority(req, res, next) {
       });
       return;
   }
+
+  data = await isValid.decryptObjectData(data);
+  if (!data) {
+    return utils.writeJson(res, {
+      responseCode: 406,
+      responseMessage: "Unable to read data"
+    })
+  }
+
   switch (version) {
     case 2:
       break;
@@ -1104,6 +1122,15 @@ module.exports.deletePriority = async function deletePriority(req, res, next) {
       });
       return;
   }
+
+  data = await isValid.decryptObjectData(data);
+  if (!data) {
+    return utils.writeJson(res, {
+      responseCode: 406,
+      responseMessage: "Unable to read data"
+    })
+  }
+  
   switch (version) {
     case 2:
       break;
@@ -1131,17 +1158,22 @@ module.exports.deletePriority = async function deletePriority(req, res, next) {
 };
 module.exports.getPriority = async function getPriority(req, res, next) {
   var signature = req.swagger.params["signature"].value;
+  var clientKey = req.swagger.params["clientKey"].value;
+  var token = req.swagger.params["token"].value;
   var param = {}
+  isValid = new validator(signature, token);
   var version = 1;
   switch (version) {
     case 2:
       break;
     default:
-      let cs = await checking.checkSignature(signature);
-      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+      if (await isValid.checkSignature() && await isValid.checkToken()) {    
         apiService
           .getPriority(param)
           .then(async function (response) {
+            if (response.data) {
+              response.data = await asym.encryptArrayObjectRsa(response.data, clientKey);
+            }
             utils.writeJson(res, response);
           })
           .catch(function (response) {
