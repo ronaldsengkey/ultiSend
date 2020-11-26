@@ -262,6 +262,7 @@ exports.postOrder = function (data) {
     let res = {};
     try {
       var orderReff = await getOrderReff();
+      console.log('orderReff =>',orderReff)
       await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
       let newApi = new orderSchema({
           serviceName: data.serviceName,
@@ -407,7 +408,7 @@ exports.assignOrderUpdate = function (data) {
   
           if (na) {
             let query = await driverSchema.find({"driverId": data.driverId});
-            console.log('driverSchema =>',query[0]._id)
+            console.log('driverSchema =>',query)
             if(query.length >0){
               var ds = {};
               ds.courierPhoto = query[0].driverImage;
@@ -443,7 +444,7 @@ exports.assignOrderUpdate = function (data) {
       }
       resolve(res);      
     } catch (err) {
-      console.log('Error for assignOrderPost ==> ', err)
+      console.log('Error for assignOrderUpdate ==> ', err)
       res = {
           'responseCode': process.env.ERRORINTERNAL_RESPONSE,
           'responseMessage': 'Internal server error'
@@ -719,6 +720,7 @@ async function updateUltisend (data) {
           'status': data.status
         }
       };
+      console.log('updateUltisend options =>',options)
       request(options, function (error, response) {
         if (error) throw new Error(error);
         console.log(response.body);
