@@ -377,6 +377,10 @@ exports.deleteOrder = function (orderId) {
 exports.assignOrderUpdate = function (data) {
   return new Promise(async function (resolve, reject) {
     let res = {}; var assignImage='';
+    var bodyParser = require('body-parser');
+    var app = require("restana")();
+    app.use(bodyParser());
+
     try {
       console.log('assignOrderUpdate data =>',data)
       // let sl = await checkLog(data)
@@ -394,9 +398,11 @@ exports.assignOrderUpdate = function (data) {
           }, {
             useFindAndModify: false
           });
+          await mongoose.connection.close();
           console.log('nanananananana=>',na)
           if(data.status == 'delivered'){
             // update driver status
+            await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
             await driverSchema.findOneAndUpdate({"driverId": data.driverId}, {
               $set: {
                 driverStatus: 'off'
@@ -404,12 +410,14 @@ exports.assignOrderUpdate = function (data) {
             }, {
               useFindAndModify: false
             });
+            await mongoose.connection.close();
           }
   
           if (na) {
+            await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
             let query = await driverSchema.find({"driverId": data.driverId});
+            await mongoose.connection.close();
             console.log('driverSchema 1 =>',query)
-            query = JSON.parse(query);
             console.log('driverSchema 2 =>',query[0])
             if(query.length >0){
               var ds = {};
@@ -432,7 +440,9 @@ exports.assignOrderUpdate = function (data) {
                 status: data.status,
                 userCreated: data.userCreated,
               });
+              await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
               await newApi.save();
+              await mongoose.connection.close();
             }
   
             res.responseCode = process.env.SUCCESS_RESPONSE;
