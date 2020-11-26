@@ -408,7 +408,9 @@ exports.assignOrderUpdate = function (data) {
   
           if (na) {
             let query = await driverSchema.find({"driverId": data.driverId});
-            console.log('driverSchema =>',query)
+            console.log('driverSchema 1 =>',query)
+            query = JSON.parse(query);
+            console.log('driverSchema 2 =>',query[0])
             if(query.length >0){
               var ds = {};
               ds.courierPhoto = query[0].driverImage;
