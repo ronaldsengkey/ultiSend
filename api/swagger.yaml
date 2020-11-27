@@ -716,51 +716,47 @@ paths:
         - name: "email"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "password"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "fullName"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "company"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "deviceId"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "phoneCode"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "phone"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "photo"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "cardImage"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "id_number"
           in: "formData"
           type: "string"
-          required: false 
+          required: true 
         - name: "vehicleInfo"
           in: "formData"
           type: "string"
-          required: false
-        - name: "company_profile_id"
-          in: "formData"
-          type: "string"
-          required: false
+          required: true
         # - in: "body"
         #   name: "body"
         #   required: false
@@ -1027,7 +1023,15 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "clientKey"
+          in: "header"
+          required: true
+          type: "string"
         - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "token"
           in: "header"
           required: true
           type: "string"
@@ -1097,6 +1101,10 @@ paths:
           default: 1
           minimum: 1
           collectionFormat: "multi"
+        - name: "token"
+          in: "header"
+          required: true
+          type: "string"
         - in: "body"
           name: "body"
           required: true
@@ -1161,6 +1169,10 @@ paths:
           default: 1
           minimum: 1
           collectionFormat: "multi"
+        - name: "token"
+          in: "header"
+          required: true
+          type: "string"
         - in: "body"
           name: "body"
           required: true
@@ -1213,6 +1225,10 @@ paths:
         - "application/xml"
         - "application/json"
       parameters:
+        - name: "token"
+          in: "header"
+          required: true
+          type: "string"
         - name: "signature"
           in: "header"
           required: true
