@@ -377,12 +377,12 @@ exports.deleteOrder = function (orderId) {
 exports.assignOrderUpdate = function (data) {
   return new Promise(async function (resolve, reject) {
     let res = {}; var assignImage='';
-    var bodyParser = require('body-parser');
-    var app = require("restana")();
-    app.use(bodyParser());
+    // var bodyParser = require('body-parser');
+    // var app = require("restana")();
+    // app.use(bodyParser());
 
     try {
-      console.log('assignOrderUpdate data =>',data)
+      console.log('assignOrderUpdate data y =>',data)
       // let sl = await checkLog(data)
       let sl = [];
       if(sl.length>0){
@@ -418,9 +418,10 @@ exports.assignOrderUpdate = function (data) {
             let query = await driverSchema.find({"driverId": data.driverId});
             await mongoose.connection.close();
             console.log('driverSchema 1 =>',query)
-            console.log('driverSchema 2 =>',query[0])
+            console.log('driverSchema lenght =>',query.length)
             if(query.length >0){
               var ds = {};
+              var tmp = query[0];
               ds.courierPhoto = query[0].driverImage;
               ds.courierName = query[0].driverName;
               ds.courierPhoneNumber = query[0].driverPhone;
@@ -435,7 +436,8 @@ exports.assignOrderUpdate = function (data) {
               let newApi = new orderLogSchema({
                 orderId: data.orderId,
                 // driverId: data.driverId, // error, change objId
-                driverId: query[0]._id,
+                // driverId: query[0]._id,
+                driverId: tmp._id,
                 responseNotes: data.responseNotes,
                 status: data.status,
                 userCreated: data.userCreated,
@@ -443,6 +445,8 @@ exports.assignOrderUpdate = function (data) {
               await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
               await newApi.save();
               await mongoose.connection.close();
+            }else{
+              console.log('driver not found')
             }
   
             res.responseCode = process.env.SUCCESS_RESPONSE;
@@ -454,7 +458,7 @@ exports.assignOrderUpdate = function (data) {
           await mongoose.connection.close();
 
       }
-      resolve(res);      
+      resolve(res);
     } catch (err) {
       console.log('Error for assignOrderUpdate ==> ', err)
       res = {
@@ -633,25 +637,34 @@ function extend(target) {
 async function getOrderReff() {
   var today = new Date();
   var day = today.getDate();
-  var head = 'REFF/'+ moment().format('YYYYMMDD');
   today.setDate(today.getDate() - 1);
   var tomorow = new Date();
   tomorow.setDate(tomorow.getDate() + 1);
   await mongoose.connect(mongoConf.mongoDb.url, { useNewUrlParser: true });
 
-  let query = await orderSchema.aggregate([
-    {$project: {day: {$dayOfMonth: '$createdDate'}, month: {$month: '$createdDate'}, year: {$year: '$createdDate'} }},
-    {$match: {day: day, month: today.getMonth()+1, year: today.getFullYear()} },
-    {$group: { _id: null, count: { $sum: 1 } }}
-  ]);
+  var head = 'REFF/'+ moment().format('YYYYMMDD');
+  var gte =  moment().format('YYYY-MM-DD');
+  var lte =  moment().add(1,"days").format('YYYY-MM-DD');
+
+  var query = await orderSchema.find({
+    'createdDate': {
+      '$gte': gte,
+      '$lte': lte
+    }
+  }).sort({createdDate: -1});
+
+  // let query = await orderSchema.aggregate([
+  //   {$project: {day: {$dayOfMonth: '$createdDate'}, month: {$month: '$createdDate'}, year: {$year: '$createdDate'} }},
+  //   {$match: {day: day, month: today.getMonth()+1, year: today.getFullYear()} },
+  //   {$group: { _id: null, count: { $sum: 1 } }}
+  // ]);
 
   if(query.length > 0){
-      var id = String(query[0].count + 1).padStart(4, '0'); 
-      var reff = head+'/'+id;
+      var id = parseInt(query[0].orderReff.substr(14,4))+1;
+      var reff = head+'/'+ String(id).padStart(4, '0');
   }else{
       var reff = head+'/0001';
   }
-  console.log('reff =>',reff)
   await mongoose.connection.close();
   return reff;
 }
