@@ -1025,15 +1025,15 @@ paths:
       parameters:
         - name: "clientKey"
           in: "header"
-          required: true
+          required: false
           type: "string"
         - name: "signature"
           in: "header"
-          required: true
+          required: false
           type: "string"
         - name: "token"
           in: "header"
-          required: true
+          required: false
           type: "string"
         - name: "v"
           in: "query"

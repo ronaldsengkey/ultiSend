@@ -1161,19 +1161,19 @@ module.exports.getPriority = async function getPriority(req, res, next) {
   var clientKey = req.swagger.params["clientKey"].value;
   var token = req.swagger.params["token"].value;
   var param = {}
-  isValid = new validator(signature, token);
+  isValid = new validator(signature);
   var version = 1;
   switch (version) {
     case 2:
       break;
     default:
-      if (await isValid.checkSignature() && await isValid.checkToken()) {    
+      if (await isValid.checkSignature()) {    
         apiService
           .getPriority(param)
           .then(async function (response) {
-            if (response.data) {
-              response.data = await asym.encryptArrayObjectRsa(response.data, clientKey);
-            }
+            // if (response.data) {
+            //   response.data = await asym.encryptArrayObjectRsa(response.data, clientKey);
+            // }
             utils.writeJson(res, response);
           })
           .catch(function (response) {
