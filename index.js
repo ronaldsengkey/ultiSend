@@ -19,6 +19,8 @@ var options = {
   useStubs: process.env.NODE_ENV === "development", // Conditionally turn on stubs (mock mode)
 };
 
+var Ddos = require('ddos');
+
 // The Swagger document (require it, build it programmatically, fetch it from a URL, ...)
 var spec = fs.readFileSync(path.join(__dirname, "api/swagger.yaml"), "utf8");
 var swaggerDoc = jsyaml.safeLoad(spec);
@@ -51,16 +53,31 @@ swaggerTools.initializeMiddleware(swaggerDoc, async function (middleware) {
     })
   );
 
+  var ddos = new Ddos({burst:3,limit:4,testmode:true,whitelist:['192.168.0.97']});
+  app.use(ddos);
   // Start the server
   app.start(serverPort, "0.0.0.0").then((server) => { console.log(serverPort) });
 
-  mongoose.connect(mongoConf.mongoDb.url, {
-    useUnifiedTopology: true
-  }).then(function (e) {
-    console.log("MONGO CONNECTED");
-  });
+  // mongoose.connect(mongoConf.mongoDb.url, {
+  //   useUnifiedTopology: true
+  // }).then(function (e) {
+  //   console.log("MONGO CONNECTED");
+  // });
   // http.createServer(app).listen(serverPort, function () {
   //   console.log('Your server is listening on port %d (http://localhost:%d)', serverPort, serverPort);
   //   console.log('Swagger-ui is available on http://localhost:%d/docs', serverPort);
   // });
 });
+
+// const CronJob = require('cron').CronJob;
+// const configService = require('./config/configService');
+
+// let job1 = new CronJob('0 */1 * * * *', async function() {
+//   configService.getConfig();
+// }, null, true, 'Asia/Jakarta'); 
+// job1.start();
+
+// let job2 = new CronJob('*/10 * * * * *', async function() {
+//   // console.log("result::", await configService.getHostname('backend'));
+// }, null, true, 'Asia/Jakarta'); 
+// job2.start();
