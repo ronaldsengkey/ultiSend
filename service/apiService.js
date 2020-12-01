@@ -458,7 +458,8 @@ exports.assignOrderUpdate = function (data) {
           await mongoose.connection.close();
 
       }
-      resolve(res);
+      console.log("res::", res);
+      resolve(res);      
     } catch (err) {
       console.log('Error for assignOrderUpdate ==> ', err)
       res = {
@@ -531,6 +532,25 @@ exports.assignOrderPost = function (data) {
 
         await mongoose.connection.close();
         if (na) {
+            console.log('na =>',na)
+            var gd = await driverSchema.find({"_id": data.driverId});
+            console.log('gd =>',gd)
+            await mongoose.connection.close();
+            console.log('driverSchema 1 =>',gd)
+            console.log('driverSchema lenght =>',gd.length)
+            if(gd.length >0){
+              var ds = {};
+              var tmp = gd[0];
+              ds.courierPhoto = gd[0].driverImage;
+              ds.courierName = gd[0].driverName;
+              ds.courierPhoneNumber = gd[0].driverPhone;
+              ds.courierVehicleInfo = gd[0].driverVehicleInfo;
+              ds.status = data.status;
+              ds.orderCode = na.orderCode;
+              ds.secretKey=na.secretKey;
+              var uu = await updateUltisend(ds)
+              console.log('updateUltisend =>',uu)  
+            }
             res.responseCode = process.env.SUCCESS_RESPONSE;
             res.responseMessage = "Success, update assign order";
         } else {
