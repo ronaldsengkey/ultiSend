@@ -19,8 +19,6 @@ var options = {
   useStubs: process.env.NODE_ENV === "development", // Conditionally turn on stubs (mock mode)
 };
 
-var Ddos = require('ddos');
-
 // The Swagger document (require it, build it programmatically, fetch it from a URL, ...)
 var spec = fs.readFileSync(path.join(__dirname, "api/swagger.yaml"), "utf8");
 var swaggerDoc = jsyaml.safeLoad(spec);
@@ -53,9 +51,6 @@ swaggerTools.initializeMiddleware(swaggerDoc, async function (middleware) {
     })
   );
 
-  // var ddos = new Ddos({burst:3,limit:4,testmode:true,whitelist:['192.168.0.59']});
-  // app.use(ddos);
-  // Start the server
   app.start(serverPort, "0.0.0.0").then((server) => { console.log(serverPort) });
 
   // mongoose.connect(mongoConf.mongoDb.url, {
