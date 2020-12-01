@@ -53,8 +53,8 @@ swaggerTools.initializeMiddleware(swaggerDoc, async function (middleware) {
     })
   );
 
-  var ddos = new Ddos({burst:3,limit:4,testmode:true,whitelist:['192.168.0.97']});
-  app.use(ddos);
+  // var ddos = new Ddos({burst:3,limit:4,testmode:true,whitelist:['192.168.0.59']});
+  // app.use(ddos);
   // Start the server
   app.start(serverPort, "0.0.0.0").then((server) => { console.log(serverPort) });
 
