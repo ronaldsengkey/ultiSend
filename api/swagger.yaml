@@ -316,7 +316,228 @@ paths:
                 type: string
                 description: unauthorize.
       x-swagger-router-controller: "api"
-      
+
+  /ext/order:
+    get:
+      tags:
+        - "api"
+      summary: "get order request"
+      description: "Order request from others app"
+      operationId: "getOrder"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "clientKey"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        - name: "service"
+          in: "query"
+          description: "service category (same day, Priority)"
+          required: true
+          type: "string"
+          items:
+            type: "string"
+            default: "all"
+            enum:
+              - "sameDay"
+              - "priority"
+              - "all"
+          collectionFormat: "multi"
+        - name: "token"
+          in: "header"
+          description: "user token"
+          required: true
+          type: "string"
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
+    post:
+      tags:
+        - "api"
+      summary: "order request"
+      description: "Order request from"
+      operationId: "postOrder"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+        # - name: "service"
+        #   in: "query"
+        #   description: "service category (same day, Priority)"
+        #   required: true
+        #   type: "string"
+        #   items:
+        #     type: "string"
+        #     default: "sameDay"
+        #     enum:
+        #       - "sameDay"
+        #       - "priority"
+          collectionFormat: "multi"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/orderInquiry"
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
+
+    put:
+      tags:
+        - "api"
+      summary: "order request"
+      description: "Order update from"
+      operationId: "putOrder"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "signature"
+          in: "header"
+          required: true
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+          collectionFormat: "multi"
+        - in: "body"
+          name: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/putOrderInquiry"
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
   /api/order/assign:
     put:
       tags:
