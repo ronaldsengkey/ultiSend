@@ -30,23 +30,65 @@ exports.getOrder = function (data) {
   return new Promise(async function (resolve, reject) {
     let res = {};
     try {
-      let pId = {}, pServiceName = {}, pOrderCode = {} , pOrderReff = {}, pStatus = {};
-      if (data._id) {
-          pId = { '_id': data._id }
+      if(data != "all") {
+        let pId={}, pMN={}, pMP={}, pRN={}, pRP={}, pSV={}, pOC={} , pOR={}, pAN={}, pStatus={}, pDate={} ;
+        if (data._id) {
+            pId = { '_id': data._id }
+        }
+        if (data.serviceName) {
+          if (data.serviceName != 'all') {
+            pSV = { 'serviceName': data.serviceName }
+          }
+        }
+        if (data.merchantName) {
+          pMN = { 'merchantName': data.merchantName }
+        }
+        if (data.merchantPhone) {
+          pMP = { 'merchantPhone': data.merchantPhone }
+        }
+        if (data.receiverName) {
+          pRN = { 'receiverName': data.receiverName }
+        }
+        if (data.receiverPhone) {
+          pRP = { 'receiverPhone': data.receiverPhone }
+        }
+        if (data.assignName) {
+          pAN = { 'assignName': data.assignName }
+        }
+
+        if (data.orderCode) {
+            pOC = { 'orderCode': data.orderCode }
+        }
+        if (data.orderReff) {
+            pOR = { 'orderReff': data.orderReff }
+        }      
+        if (data.status) {
+            pStatus = { 'status': data.status }
+        }
+        if (data.transactionEndDate) {
+          if (!data.transactionStartDate) {
+            response = {
+              responseCode: process.env.WRONGINPUT_RESPONSE,
+              responseMessage: "Please insert the start date"
+            }
+            resolve(message);
+          }else{
+              var tom = new Date(data.transactionEndtDate);
+              console.log('tomtomtom=>',tom)
+              var tom = '';
+              tom = data.transactionEndDate;
+              pDate = {
+                  "createdDate": {
+                      "$gte": new Date(data.transactionStartDate),
+                      "$lte": new Date(tom)
+                  }
+              };    
+          }
+        }
+        var param = extend({}, pId, pMN, pMP, pRN, pRP, pSV, pOC, pOR, pAN, pStatus, pDate);
+      }else{
+        param={}
       }
-      if (data.serviceName) {
-          pServiceName = { 'serviceName': data.serviceName }
-      }
-      if (data.orderCode) {
-          pOrderCode = { 'orderCode': data.orderCode }
-      }
-      if (data.orderReff) {
-          pOrderReff = { 'orderReff': data.orderReff }
-      }
-      if (data.status) {
-          pStatus = { 'status': data.status }
-      }
-      var param = extend({}, pId, pServiceName, pOrderCode, pOrderReff, pStatus);
       await mongoose.connect(mongoConf.mongoDb.url, {
           useNewUrlParser: true
       });
@@ -54,6 +96,24 @@ exports.getOrder = function (data) {
       await mongoose.connection.close();
       // console.log("query::", query[0].assignId["_id"]);
       if (query.length > 0) {
+          if (data.export) { //export
+            var dt=[];
+            var i=0;
+            query.forEach( record => {
+              i++;
+              dt.push({'no':i.toString(), 'id':record.assignId.driverId,'pickupTime':record.pickupTime, 'driverName':record.assignName})
+            }); 
+            // var ce = await createExcel(dt);          
+            var ds = {
+              fullname: "admin",
+              category: 'export_order',
+              email: "phawiro@gmail.com",
+              regard_name: "admin",
+              export: JSON.stringify(dt)
+            }
+            var se = await sendEmail(ds);
+            console.log('sendEmail =>',se)
+          }
           res.responseCode = process.env.SUCCESS_RESPONSE;
           res.responseMessage = "Success";
           res.data = query;
@@ -518,6 +578,7 @@ exports.assignOrderPost = function (data) {
         }, {
           useFindAndModify: false
         });
+
         // update order status
         let na = await orderSchema.findOneAndUpdate({"_id": data.orderId}, {
           $set: {
@@ -529,6 +590,26 @@ exports.assignOrderPost = function (data) {
         }, {
           useFindAndModify: false
         });
+        console.log('na =>',na)
+        var gd = await driverSchema.find({"_id": data.driverId});
+        console.log('gd =>',gd)
+
+        await mongoose.connection.close();
+        console.log('driverSchema 1 =>',gd)
+        console.log('driverSchema lenght =>',gd.length)
+        if(gd.length >0){
+          var ds = {};
+          var tmp = gd[0];
+          ds.courierPhoto = gd[0].driverImage;
+          ds.courierName = gd[0].driverName;
+          ds.courierPhoneNumber = gd[0].driverPhone;
+          ds.courierVehicleInfo = gd[0].driverVehicleInfo;
+          ds.status = data.status;
+          ds.orderCode = na.orderCode;
+          ds.secretKey=na.secretKey;
+          var uu = await updateUltisend(ds)
+          console.log('updateUltisend =>',uu)  
+        }
 
         await mongoose.connection.close();
         if (na) {
@@ -951,4 +1032,48 @@ exports.getPriority = function (data) {
   }      
     // resolve();
   });
+}
+function sendEmail(data) {
+  console.log("sendEmail: ", data);
+  return new Promise(async function (resolve, reject) {
+      let res = {};
+      if (data.category != "rating_ticketing") {
+          data = {
+              "category": data.category,
+              "fullname": data.fullname,
+              "email": data.email,
+              "link": data.link,
+              "param": data.param,
+              "export": data.export
+          }
+      }
+      try {
+          request.post({
+              "headers": {
+                  "content-type": "application/json",
+                  "signature": "xxx" //masih hardcode
+              },
+              "url": process.env.NOTIFICATION_HOST + "/sendNotif/email",
+              "body": data,
+              "json": true
+          }, (error, response, body) => {
+              console.log('SENDING NOTIF EMAIL => ', body)
+              if (error) {
+                  console.log('error bridging sending link refund to email => ', error);
+                  resolve({
+                      responseCode: process.env.ERRORINTERNAL_RESPONSE,
+                      responseMessage: 'Internal server error'
+                  });
+              } else {
+                  resolve(body);
+              }
+          })
+      } catch (e) {
+          console.log('Error when sending email => ', e);
+          res.responseCode = process.env.ERRORINTERNAL_RESPONSE;
+          res.responseMessage = "Internal server error";
+          resolve(res);
+      }
+
+  })
 }
