@@ -67,7 +67,7 @@ module.exports.accountPost = async function accountPost(req, res, next) {
         let regis = await accountService.register(data);
         console.log("regis::", regis);
         if (regis.responseCode != process.env.SUCCESS_RESPONSE) {
-          return utils.writeJson(res, regis);  
+          return utils.writeJson(res, regis);
         }
         let body = {
           'phoneCode': data.phoneCode,
@@ -116,7 +116,7 @@ module.exports.accountPost = async function accountPost(req, res, next) {
         }
         cardImage = await backendService.uploadFile(body);
         console.log("cardImage::", cardImage);
-        
+
         body = {
           "driverId": userData.data[0].employee_id,
           "driverName": userData.data[0].employee_name,
@@ -167,14 +167,14 @@ module.exports.accountGet = async function accountGet(req, res){
         'confirmationStatus': '0',
         'company_profile_id': data.data[0].company_id,
         'division_id': driverDivisionId,
-      } 
+      }
       data = await accountService.getDataTemp(body);
     }
     if (data.data && flowEntry == 'ultisend') {
       console.log("data::", data);
-      data.data = await asym.encryptArrayObjectRsa(data.data, clientKey); 
+      data.data = await asym.encryptArrayObjectRsa(data.data, clientKey);
     }
-    utils.writeJson(res, data);  
+    utils.writeJson(res, data);
   }
   else{
     utils.writeJson(res, {
@@ -213,7 +213,7 @@ module.exports.accountUpdate = async function accountUpdate(req, res){
         'confirmationStatus': '0',
         'company_profile_id': userData.data[0].company_id,
         'division_id': driverDivisionId,
-      } 
+      }
       let dataTemp = await accountService.getDataTemp(body);
       if (dataTemp.responseCode != process.env.SUCCESS_RESPONSE) {
         return utils.writeJson(res, dataTemp);
@@ -259,7 +259,7 @@ module.exports.accountUpdate = async function accountUpdate(req, res){
       utils.writeJson(res, {
         responseCode: 406,
         responseMessage: "unaccepted"
-      }); 
+      });
     }
   }
   else{
@@ -280,9 +280,9 @@ module.exports.companyGet = async function companyGet(req, res){
   if (isValid.checkSignature()) {
     data = await accountService.getCompany({});
     if (data.data) {
-      data.data = await asym.encryptArrayObjectRsa(data.data, clientKey); 
+      data.data = await asym.encryptArrayObjectRsa(data.data, clientKey);
     }
-    utils.writeJson(res, data);  
+    utils.writeJson(res, data);
   }
   else{
     utils.writeJson(res, {
@@ -329,7 +329,7 @@ module.exports.postOrder = async function postOrder(req, res, next) {
   //     break;
   //   }
   // }
-  
+
   // console.log('data =>', data);
   // if (result) {
   //     utils.writeJson(res, result);
@@ -357,7 +357,7 @@ module.exports.postOrder = async function postOrder(req, res, next) {
           });
           return;
       }
-  }  
+  }
   if (!data.merchantName) {
       utils.writeJson(res, {
           responseCode: process.env.WRONGINPUT_RESPONSE,
@@ -421,7 +421,7 @@ module.exports.postOrder = async function postOrder(req, res, next) {
       });
       return;
   }
-  
+
   switch (version) {
     case 2:
       break;
@@ -429,7 +429,7 @@ module.exports.postOrder = async function postOrder(req, res, next) {
       // call signature validator
       // if (await isValid.checkSignature() && await isValid.checkToken()) {
       let cs = await checking.checkSignature(signature);
-      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {
         data.status='pending';
         apiService
           .postOrder(data)
@@ -461,7 +461,7 @@ module.exports.putOrder = async function putOrder(req, res, next) {
       });
       return;
   }
-  
+
   if (!data.status) {
       utils.writeJson(res, {
           responseCode: process.env.WRONGINPUT_RESPONSE,
@@ -469,13 +469,13 @@ module.exports.putOrder = async function putOrder(req, res, next) {
       });
       return;
   }
-  
+
   switch (version) {
     case 2:
       break;
     default:
       let cs = await checking.checkSignature(signature);
-      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {    
+      if (cs.responseCode == process.env.SUCCESS_RESPONSE) {
         apiService
           .putOrder(data)
           .then(function (response) {
@@ -516,7 +516,7 @@ module.exports.assignOrderPost = async function assignOrderPost(req, res, next) 
       break;
     }
   }
-  
+
   if (result) {
       utils.writeJson(res, result);
       return;
@@ -553,7 +553,7 @@ module.exports.assignOrderPost = async function assignOrderPost(req, res, next) 
       return;
   }
 
-  
+
   switch (version) {
     case 2:
       break;
@@ -583,6 +583,12 @@ module.exports.assignOrderPost = async function assignOrderPost(req, res, next) 
 };
 
 module.exports.assignOrderUpdate = async function assignOrderUpdate(req, res, next) {
+  // let buff = new Buffer('Njg6cmVnaW5hOjYyODIxNDMwNTg1Njc=', 'base64');
+  // let text = buff.toString('ascii');
+  // var arr_text = text.split(":");
+  // var orderId = arr_text[0]
+  // console.log('orderId =>',arr_text, ' -- ',orderId)
+
   var signature = req.swagger.params["signature"].value;
   var version = req.swagger.params["v"].value;
   var token = req.swagger.params["token"].value;
@@ -603,7 +609,7 @@ module.exports.assignOrderUpdate = async function assignOrderUpdate(req, res, ne
       break;
     }
   }
-  
+
   console.log('data =>', data);
   if (result) {
       utils.writeJson(res, result);
@@ -647,7 +653,7 @@ module.exports.assignOrderUpdate = async function assignOrderUpdate(req, res, ne
       return;
   }
 
-  
+
   switch (version) {
     case 2:
       break;
@@ -697,9 +703,19 @@ module.exports.getOrder = async function getOrder(req, res, next) {
   //     return;
   // }
   // console.log('clientKey =>',clientKey)
-  let param = {}
+  // let param = {}
+  var param = req.swagger.params["param"].value;
   var service = req.swagger.params["service"].value;
-  param.service = service;
+  console.log('param =>',param)
+  if(!param) {
+    param={}
+  }else{
+    if(param != "all") {
+      param=JSON.parse(param);
+      param.serviceName = service;
+    }
+  }
+
 
   isValid = new validator(signature, token);
 
@@ -713,7 +729,7 @@ module.exports.getOrder = async function getOrder(req, res, next) {
           .getOrder(param)
           .then(async function (response) {
             if (response.data) {
-              response.data = await asym.encryptArrayObjectRsa(response.data, clientKey, [], ['assignId']); 
+              response.data = await asym.encryptArrayObjectRsa(response.data, clientKey, [], ['assignId']);
             }
             utils.writeJson(res, response);
           })
@@ -751,7 +767,7 @@ module.exports.postDriver = async function postDriver(req, res, next) {
       break;
     }
   }
-  
+
   if (result) {
       utils.writeJson(res, result);
       return;
@@ -770,7 +786,7 @@ module.exports.postDriver = async function postDriver(req, res, next) {
           responseMessage: "driverName is required",
       });
       return;
-  }    
+  }
   if (!data.driverPhone) {
       utils.writeJson(res, {
           responseCode: process.env.WRONGINPUT_RESPONSE,
@@ -785,7 +801,7 @@ module.exports.postDriver = async function postDriver(req, res, next) {
       });
       return;
   }
-  
+
   if (!data.driverEmail) {
       utils.writeJson(res, {
           responseCode: process.env.WRONGINPUT_RESPONSE,
@@ -900,7 +916,7 @@ module.exports.putDriver = async function putDriver(req, res, next) {
   //     break;
   //   }
   // }
-  
+
   // if (result) {
   //     utils.writeJson(res, result);
   //     return;
@@ -1032,7 +1048,7 @@ module.exports.createPriority = async function createPriority(req, res, next) {
       break;
     default:
 
-      if (await isValid.checkSignature() && await isValid.checkToken()) {    
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         apiService
           .createPriority(data)
           .then(function (response) {
@@ -1092,7 +1108,7 @@ module.exports.updatePriority = async function updatePriority(req, res, next) {
       break;
     default:
 
-      if (await isValid.checkSignature() && await isValid.checkToken()) {    
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         apiService
           .updatePriority(data)
           .then(function (response) {
@@ -1132,12 +1148,12 @@ module.exports.deletePriority = async function deletePriority(req, res, next) {
       responseMessage: "Unable to read data"
     })
   }
-  
+
   switch (version) {
     case 2:
       break;
     default:
-      if (await isValid.checkSignature() && await isValid.checkToken()) {    
+      if (await isValid.checkSignature() && await isValid.checkToken()) {
         apiService
           .deletePriority(data)
           .then(function (response) {
@@ -1167,7 +1183,7 @@ module.exports.getPriority = async function getPriority(req, res, next) {
     case 2:
       break;
     default:
-      if (await isValid.checkSignature()) {    
+      if (await isValid.checkSignature()) {
         apiService
           .getPriority(param)
           .then(async function (response) {

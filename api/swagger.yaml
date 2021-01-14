@@ -140,7 +140,12 @@ paths:
           description: "user token"
           required: true
           type: "string"
-
+        - name: "param"
+          in: "header"
+          description: "param for filter"
+          required: false
+          type: "string"
+          
       responses:
         "200":
           description: "Account post response"
@@ -317,6 +322,59 @@ paths:
                 description: unauthorize.
       x-swagger-router-controller: "api"
 
+  /ext/export:
+    get:
+      tags:
+        - "api"
+      summary: "export order request"
+      description: "export request from others app"
+      operationId: "exportOrder"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "param"
+          in: "header"
+          description: "param for filter"
+          required: false
+          type: "string"
+          
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
   /ext/order:
     get:
       tags:
@@ -360,6 +418,11 @@ paths:
           in: "header"
           description: "user token"
           required: true
+          type: "string"
+        - name: "param"
+          in: "header"
+          description: "param for filter"
+          required: false
           type: "string"
 
       responses:
