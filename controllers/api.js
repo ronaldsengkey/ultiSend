@@ -120,7 +120,7 @@ module.exports.accountPost = async function accountPost(req, res, next) {
         body = {
           "driverId": userData.data[0].employee_id,
           "driverName": userData.data[0].employee_name,
-          "driverPhone": userData.data[0].employee_phone,
+          "driverPhone": data.phoneCode + userData.data[0].employee_phone,
           "driverAddress": userData.data[0].employee_address,
           "driverEmail": userData.data[0].employee_email,
           "driverVehicleInfo": dataTemp.data[0].vehicleInfo,
