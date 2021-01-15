@@ -1045,7 +1045,6 @@ exports.getPriority = function (data) {
   });
 }
 function sendEmail(data) {
-  console.log("sendEmail: ", data);
   return new Promise(async function (resolve, reject) {
       let res = {};
       if (data.category != "rating_ticketing") {
