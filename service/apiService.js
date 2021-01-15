@@ -97,6 +97,14 @@ exports.getOrder = function (data) {
       // console.log("query::", query[0].assignId["_id"]);
       if (query.length > 0) {
           if (data.export) { //export
+            //get email admin link
+            var adminLink = 'phawiro@gmail.com';
+            var a = {"companyProfileName":"linkx", "AuthId": "1", "accountStatus":"1"}
+            var gal = await getAdminLink(a);
+            if(gal.responseCode == process.env.SUCCESS_RESPONSE){
+              adminLink = gal.data[0].employee_email;
+            }
+      
             var dt=[];
             var i=0;
             query.forEach( record => {
@@ -107,16 +115,19 @@ exports.getOrder = function (data) {
             var ds = {
               fullname: "admin",
               category: 'export_order',
-              email: "phawiro@gmail.com",
+              email: adminLink,
               regard_name: "admin",
               export: JSON.stringify(dt)
             }
             var se = await sendEmail(ds);
             console.log('sendEmail =>',se)
+            res.responseCode = se.responseCode;
+            res.responseMessage = se.responseMessage;
+          }else{
+            res.responseCode = process.env.SUCCESS_RESPONSE;
+            res.responseMessage = "Success";
+            res.data = query;
           }
-          res.responseCode = process.env.SUCCESS_RESPONSE;
-          res.responseMessage = "Success";
-          res.data = query;
       } else {
           res.responseCode = process.env.NOTFOUND_RESPONSE;
           res.responseMessage = "Data not found";
@@ -1075,5 +1086,32 @@ function sendEmail(data) {
           resolve(res);
       }
 
+  })
+}
+
+async function getAdminLink(data) {
+  return new Promise(async function (resolve, reject) {
+      try {
+          request.get({
+              "headers": {
+                  "content-type": "application/json",
+                  "param": JSON.stringify(data),
+                  "apiService": "eyJjb2RlIjoidWx0aXNlbmQifQ",
+              },
+              "url": process.env.ACCOUNT_SERVICE_HOST + "/data/employee",
+          }, async (error, response, body) => {
+              if (error) {
+                  console.log('Error checking employee data => ', error)
+                  reject(process.env.ERRORINTERNAL_RESPONSE);
+              } else {
+                  let result = JSON.parse(body);
+                  // console.log('RESULT CHECK DATA EMPLOYEE => ', result);
+                  resolve(result);
+              }
+          })
+      } catch (e) {
+          console.log('Error checking employee data => ', e)
+          reject(process.env.ERRORINTERNAL_RESPONSE);
+      }
   })
 }
