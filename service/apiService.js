@@ -601,7 +601,7 @@ exports.assignOrderPost = function (data) {
         }, {
           useFindAndModify: false
         });
-        console.log('na =>',na)
+        console.log('na 1 =>',na)
         var gd = await driverSchema.find({"_id": data.driverId});
         console.log('gd =>',gd)
 
@@ -622,9 +622,9 @@ exports.assignOrderPost = function (data) {
           console.log('updateUltisend =>',uu)  
         }
 
-        await mongoose.connection.close();
+        // await mongoose.connection.close();
         if (na) {
-            console.log('na =>',na)
+            console.log('na 2 =>',na)
             await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
             var gd = await driverSchema.find({"_id": data.driverId});
             console.log('gd =>',gd)
