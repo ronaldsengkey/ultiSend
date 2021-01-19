@@ -625,6 +625,7 @@ exports.assignOrderPost = function (data) {
         await mongoose.connection.close();
         if (na) {
             console.log('na =>',na)
+            await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
             var gd = await driverSchema.find({"_id": data.driverId});
             console.log('gd =>',gd)
             await mongoose.connection.close();
