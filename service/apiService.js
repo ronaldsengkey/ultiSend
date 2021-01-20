@@ -124,7 +124,7 @@ exports.getOrder = function (data) {
               regard_name: "admin",
               export: JSON.stringify(dt)
             }
-            var se = await sendEmail(ds);
+            var se = await sendEmail(ds); 
             console.log('sendEmail =>',se)
             res.responseCode = se.responseCode;
             res.responseMessage = se.responseMessage;
