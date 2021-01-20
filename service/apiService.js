@@ -27,6 +27,7 @@ exports.accountPost = function () {
 };
 
 exports.getOrder = function (data) {
+  console.log('getOrder data =>',data)
   return new Promise(async function (resolve, reject) {
     let res = {};
     try {
@@ -104,14 +105,18 @@ exports.getOrder = function (data) {
             if(gal.responseCode == process.env.SUCCESS_RESPONSE){
               adminLink = gal.data[0].employee_email;
             }
-      
+
             var dt=[];
             var i=0;
             query.forEach( record => {
               i++;
-              dt.push({'no':i.toString(), 'id':record.assignId.driverId,'pickupTime':record.pickupTime, 'driverName':record.assignName})
+              dt.push({'no':i.toString(), 'merchantId':record.merchantId,'pickupTime':record.pickupTime, 'merchantName':record.merchantName, 'merchantPhone':record.merchantPhone, 'merchantAddress':record.merchantAddress, 'receivertName':record.receiverName, 'receiverPhone':record.receiverPhone, 'receiverAddress':record.receiverAddress, 'packageType': record.packageType, 'serviceName': record.serviceName, 'total': record.total, 'paymentBy': record.paymentBy, 'paymentMethod': record.paymentMethod, 'status':record.status })
             }); 
-            // var ce = await createExcel(dt);          
+            // var ce = await createExcel(dt);   
+            // console.log('createExcel =>',ce)      
+            // res.responseCode = process.env.SUCCESS_RESPONSE;
+            // res.responseMessage = "Success";
+ 
             var ds = {
               fullname: "admin",
               category: 'export_order',
@@ -340,16 +345,25 @@ exports.postOrder = function (data) {
           pickupTime: data.pickupTime,
           orderCode: data.orderCode,
           orderReff: orderReff,
+          merchantId: data.merchantId,
           merchantName: data.merchantName,
           merchantAddress: data.merchantAddress,
           merchantPhone: data.merchantPhone,
+          merchantLat: data.merchantLat,
+          merchantLong: data.merchantLong,
           receiverName: data.receiverName,
           receiverAddress: data.receiverAddress,
           receiverPhone: data.receiverPhone,
+          receiverLat: data.receiverLat,
+          receiverLong: data.receiverLong,          
           pickupTime: data.pickupTime,
           status: data.status,
           secretKey: data.secretKey,
           orderItem: data.orderItem,
+          packageType: data.packageType,
+          paymentBy: 'Ultimeal',
+          paymentMethod: data.paymentMethod,
+          total: data.total,
           userCreated: data.userCreated,
       });
       let na = await newApi.save();
@@ -1115,3 +1129,46 @@ async function getAdminLink(data) {
       }
   })
 }
+function createExcel (data) {
+  console.log('createExcel data =>',data)
+	const xl = require('excel4node');
+	const wb = new xl.Workbook();
+	const ws = wb.addWorksheet('order');
+  
+	const headingColumnNames = [
+		"No",
+		"Id User",
+		"Tanggal Pengambilan",
+    "Nama Pengirim",
+    "Telp Pengirim",
+		"Alamat Pengirim",
+    "Nama Penerima",
+    "Telp Penerima",
+    "Alamat Penerima",
+    "Jenis Barang",
+    "Jenis Pengiriman",
+    "Total",
+    "Pembayaran Oleh",
+    "Metode Pembayaran",
+    "Status",
+	]
+  
+	//Write Column Title in Excel file
+	let headingColumnIndex = 1;
+	headingColumnNames.forEach(heading => {
+		ws.cell(1, headingColumnIndex++)
+			.string(heading)
+	});
+  
+	let rowIndex = 2;  
+	data.forEach( record => {
+		let columnIndex = 1;
+		Object.keys(record ).forEach(columnName =>{
+			ws.cell(rowIndex,columnIndex++)
+				.string(record [columnName])
+		});
+		rowIndex++;
+	}); 
+	wb.write('order.xlsx');
+	return 200
+  }
