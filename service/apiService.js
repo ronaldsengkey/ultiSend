@@ -74,7 +74,7 @@ exports.getOrder = function (data) {
             }
             resolve(message);
           }else{
-              var tom = new Date(data.transactionEndtDate);
+              var tom = new Date(data.transactionEndDate);
               console.log('tomtomtom=>',tom)
               var tom = '';
               tom = data.transactionEndDate;
