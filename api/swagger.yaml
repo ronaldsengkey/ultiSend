@@ -1708,24 +1708,64 @@ definitions:
   orderInquiry:
     type: "object"
     properties:
-      orderId:
-        type: "string"
-      service:
+      serviceName:
         type: "string"
         example: "sameDay, priority"
+      pickupTime:  
+        type: "string"
+        example: "2020-12-12 (09:00)"    
+      orderCode:
+        type: "string"
+        example: "UMPO20112353"    
+      merchantId:
+        type: "string"
+        example: "1"
       merchantName:
         type: "string"
+        example: "Pooding.id"
       merchantAddress:
         type: "string"
+        example: "Putat Indah Timur 3/7 Surabaya"
       merchantPhone:
         type: "string"
+        example: "031-"
+      merchantLat:
+        type: "string"
+        example: "-7.263763"
+      merchantLong:
+        type: "string"
+        example: "112.738657"
       receiverName:
         type: "string"
+        example: "Andriansyah"
       receiverAddress:
         type: "string"
+        example: "Jl. Tunjungan"
       receiverPhone:
         type: "string"
-
+        example: "031-"
+      receiverLat:
+        type: "string"
+        example: "-7.263763"
+      receiverLong:
+        type: "string"
+        example: "112.738657"
+      orderItem:
+        type: "string"
+        example: "[{'name':'Ayam Kungpao','quantity':1}]"
+      packageType:
+        type: "string"
+        example: "Barang basah/Barang kering"
+      paymentBy:
+        type: "string"
+        example: "Ultimeal/.."
+      paymentMethod:
+        type: "string"
+        example: "cash/.."
+      total:
+        type: "string"
+        example: "1000"
+        
   putOrderInquiry:
     type: "object"
     properties:

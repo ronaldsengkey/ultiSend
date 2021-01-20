@@ -11,6 +11,10 @@ const templateSchema = new Schema({
         type: String,
         required: true
     },
+    merchantId:{
+        type: String,
+        required: true
+    },
     merchantName: {
         type: String,
         required: true
@@ -23,6 +27,14 @@ const templateSchema = new Schema({
         type: String,
         required: true
     },
+    merchantLat: {
+        type: String,
+        required: false
+    },
+    merchantLong: {
+        type: String,
+        required: false
+    },    
     receiverName: {
         type: String,
         required: true
@@ -35,6 +47,15 @@ const templateSchema = new Schema({
         type: String,
         required: true
     },
+    receiverLat: {
+        type: String,
+        required: false
+    },
+    receiverLong: {
+        type: String,
+        required: false
+    },
+
     receiverImage: {
         type: String,
         required: false
@@ -66,6 +87,22 @@ const templateSchema = new Schema({
     orderItem: {
         type: String,
         required: true
+    },
+    packageType: {
+        type: String,
+        required: false
+    },
+    paymentBy: {
+        type: String,
+        required: false
+    },    
+    paymentMethod: {
+        type: String,
+        required: false
+    },    
+    total: {
+        type: String,
+        required: false
     },
     secretKey: {
         type: String,
