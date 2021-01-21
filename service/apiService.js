@@ -112,14 +112,19 @@ exports.getOrder = function (data) {
               i++;
               dt.push({'no':i.toString(), 'merchantId':record.merchantId,'pickupTime':record.pickupTime, 'merchantName':record.merchantName, 'merchantPhone':record.merchantPhone, 'merchantAddress':record.merchantAddress, 'receivertName':record.receiverName, 'receiverPhone':record.receiverPhone, 'receiverAddress':record.receiverAddress, 'packageType': record.packageType, 'serviceName': record.serviceName, 'total': record.total, 'paymentBy': record.paymentBy, 'paymentMethod': record.paymentMethod, 'status':record.status })
             }); 
-            // var ce = await createExcel(dt);   
+            // var headingColumnNames = ["No","Id User","Tanggal Pengambilan","Nama Pengirim","Telp Pengirim","Alamat Pengirim","Nama Penerima","Telp Penerima","Alamat Penerima","Jenis Barang","Jenis Pengiriman","Total","Pembayaran Oleh","Metode Pembayaran","Status"];
+            // var dSend = {
+            //   record: dt,
+            //   headingColumnNames: headingColumnNames
+            //   }
+            // var ce = await createExcel(dSend);   
             // console.log('createExcel =>',ce)      
             // res.responseCode = process.env.SUCCESS_RESPONSE;
             // res.responseMessage = "Success";
  
             var ds = {
               fullname: "admin",
-              category: 'export_order',
+              category: 'exportOrder',
               email: adminLink,
               regard_name: "admin",
               export: JSON.stringify(dt)
@@ -474,54 +479,56 @@ exports.assignOrderUpdate = function (data) {
           res.responseCode = process.env.FAILED_RESPONSE;
           res.responseMessage = "Failed update assign order";
       }else{
+        await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
+        let na = await orderSchema.find({"_id": data.orderId});
+        await mongoose.connection.close();
+        if(na.length >0) {
+          console.log('orderSchema find length =>',na.length)
           await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
-          // update order status
-          let na = await orderSchema.findOneAndUpdate({"_id": data.orderId}, {
-            $set: {
-              status: data.status
-            }
-          }, {
-            useFindAndModify: false
-          });
+          let query = await driverSchema.find({"driverId": data.driverId});
           await mongoose.connection.close();
-          console.log('nanananananana=>',na)
-          if(data.status == 'delivered'){
-            // update driver status
-            await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
-            await driverSchema.findOneAndUpdate({"driverId": data.driverId}, {
-              $set: {
-                driverStatus: 'off'
+          console.log('driverSchema 1 =>',query)
+          console.log('driverSchema lenght =>',query.length)
+          if(query.length >0){
+            var ds = {};
+            var tmp = query[0];
+            ds.courierPhoto = query[0].driverImage;
+            ds.courierName = query[0].driverName;
+            ds.courierPhoneNumber = query[0].driverPhone;
+            ds.courierVehicleInfo = query[0].driverVehicleInfo;
+            ds.status = data.status;
+            ds.orderCode = na[0].orderCode;
+            ds.secretKey=na[0].secretKey;
+            var uu = await updateUltisend(ds)
+            if(uu.responseCode == process.env.SUCCESS_RESPONSE) {
+              console.log('updateUltisend ress =>',uu.responseCode)  
+              //update order 
+              await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
+              let uos = await orderSchema.findOneAndUpdate({"_id": data.orderId}, {
+                $set: {
+                  status: data.status
+                }
+              }, {
+                useFindAndModify: false
+              });
+              await mongoose.connection.close();
+              console.log('update orderSchema =>',uos)
+              if(data.status == 'delivered'){
+                // update driver status
+                await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
+                await driverSchema.findOneAndUpdate({"driverId": data.driverId}, {
+                  $set: {
+                    driverStatus: 'off'
+                  }
+                }, {
+                  useFindAndModify: false
+                });
+                await mongoose.connection.close();
               }
-            }, {
-              useFindAndModify: false
-            });
-            await mongoose.connection.close();
-          }
-  
-          if (na) {
-            await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
-            let query = await driverSchema.find({"driverId": data.driverId});
-            await mongoose.connection.close();
-            console.log('driverSchema 1 =>',query)
-            console.log('driverSchema lenght =>',query.length)
-            if(query.length >0){
-              var ds = {};
-              var tmp = query[0];
-              ds.courierPhoto = query[0].driverImage;
-              ds.courierName = query[0].driverName;
-              ds.courierPhoneNumber = query[0].driverPhone;
-              ds.courierVehicleInfo = query[0].driverVehicleInfo;
-              ds.status = data.status;
-              ds.orderCode = na.orderCode;
-              ds.secretKey=na.secretKey;
-              var uu = await updateUltisend(ds)
-              console.log('updateUltisend =>',uu)  
 
               // insert log
               let newApi = new orderLogSchema({
                 orderId: data.orderId,
-                // driverId: data.driverId, // error, change objId
-                // driverId: query[0]._id,
                 driverId: tmp._id,
                 responseNotes: data.responseNotes,
                 status: data.status,
@@ -530,17 +537,92 @@ exports.assignOrderUpdate = function (data) {
               await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
               await newApi.save();
               await mongoose.connection.close();
-            }else{
-              console.log('driver not found')
-            }
+
+              res.responseCode = process.env.SUCCESS_RESPONSE;
+              res.responseMessage = "Success, update assign order"
   
-            res.responseCode = process.env.SUCCESS_RESPONSE;
-            res.responseMessage = "Success,update assign order"
-          } else {
+
+            }else {
+              res.responseCode = process.env.FAILED_RESPONSE;
+              res.responseMessage = "Failed update assign order";    
+            }
+          }else{
+            console.log('driver not found')
             res.responseCode = process.env.FAILED_RESPONSE;
-            res.responseMessage = "Failed assign order";
-          }
-          await mongoose.connection.close();
+            res.responseMessage = "Failed update assign order, driver not found";
+  
+          }                
+        } else {
+          res.responseCode = process.env.FAILED_RESPONSE;
+          res.responseMessage = "Failed, update assign order";
+        }
+          // await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
+          // // update order status
+          // let na = await orderSchema.findOneAndUpdate({"_id": data.orderId}, {
+          //   $set: {
+          //     status: data.status
+          //   }
+          // }, {
+          //   useFindAndModify: false
+          // });
+          // await mongoose.connection.close();
+          // console.log('nanananananana=>',na)
+          // if(data.status == 'delivered'){
+          //   // update driver status
+          //   await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
+          //   await driverSchema.findOneAndUpdate({"driverId": data.driverId}, {
+          //     $set: {
+          //       driverStatus: 'off'
+          //     }
+          //   }, {
+          //     useFindAndModify: false
+          //   });
+          //   await mongoose.connection.close();
+          // }
+  
+          // if (na) {
+          //   await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
+          //   let query = await driverSchema.find({"driverId": data.driverId});
+          //   await mongoose.connection.close();
+          //   console.log('driverSchema 1 =>',query)
+          //   console.log('driverSchema lenght =>',query.length)
+          //   if(query.length >0){
+          //     var ds = {};
+          //     var tmp = query[0];
+          //     ds.courierPhoto = query[0].driverImage;
+          //     ds.courierName = query[0].driverName;
+          //     ds.courierPhoneNumber = query[0].driverPhone;
+          //     ds.courierVehicleInfo = query[0].driverVehicleInfo;
+          //     ds.status = data.status;
+          //     ds.orderCode = na.orderCode;
+          //     ds.secretKey=na.secretKey;
+          //     var uu = await updateUltisend(ds)
+          //     console.log('updateUltisend =>',uu)  
+
+          //     // insert log
+          //     let newApi = new orderLogSchema({
+          //       orderId: data.orderId,
+          //       // driverId: data.driverId, // error, change objId
+          //       // driverId: query[0]._id,
+          //       driverId: tmp._id,
+          //       responseNotes: data.responseNotes,
+          //       status: data.status,
+          //       userCreated: data.userCreated,
+          //     });
+          //     await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
+          //     await newApi.save();
+          //     await mongoose.connection.close();
+          //   }else{
+          //     console.log('driver not found')
+          //   }
+  
+          //   res.responseCode = process.env.SUCCESS_RESPONSE;
+          //   res.responseMessage = "Success,update assign order"
+          // } else {
+          //   res.responseCode = process.env.FAILED_RESPONSE;
+          //   res.responseMessage = "Failed assign order";
+          // }
+          // await mongoose.connection.close();
 
       }
       console.log("res::", res);
@@ -875,8 +957,8 @@ async function updateUltisend (data) {
       console.log('updateUltisend options =>',options)
       request(options, function (error, response) {
         if (error) throw new Error(error);
-        console.log(response.body);
-        resolve(response.body);
+        console.log('response.body =>',JSON.parse(response.body));
+        resolve(JSON.parse(response.body));
       });
     } catch (e) {
       console.log('Error updateUltisend => ', e)
@@ -1130,45 +1212,75 @@ async function getAdminLink(data) {
   })
 }
 function createExcel (data) {
-  console.log('createExcel data =>',data)
-	const xl = require('excel4node');
-	const wb = new xl.Workbook();
-	const ws = wb.addWorksheet('order');
+  // console.log('createExcel =>',data)
+	var headingColumnNames = data.headingColumnNames;
+  var tmp = data.record;
+
+  //generate excel with password
+  var aCell = ['A','B','C','D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U']
+  const XlsxPopulate = require('xlsx-populate');
+  XlsxPopulate.fromBlankAsync().then(wb => {
+    var i=0;
+    headingColumnNames.forEach(heading => {
+      var cell = aCell[i]+1;
+      wb.sheet("Sheet1").cell(cell).value(heading)
+      i++;
+    });
+    let rowIndex = 2;  
+    tmp.forEach( record => {
+      let columnIndex = 1;
+      Object.keys(record ).forEach(columnName =>{
+        wb.sheet("Sheet1").cell(rowIndex,columnIndex++).value(record [columnName])
+      });
+      rowIndex++;
+    });    
   
-	const headingColumnNames = [
-		"No",
-		"Id User",
-		"Tanggal Pengambilan",
-    "Nama Pengirim",
-    "Telp Pengirim",
-		"Alamat Pengirim",
-    "Nama Penerima",
-    "Telp Penerima",
-    "Alamat Penerima",
-    "Jenis Barang",
-    "Jenis Pengiriman",
-    "Total",
-    "Pembayaran Oleh",
-    "Metode Pembayaran",
-    "Status",
-	]
-  
-	//Write Column Title in Excel file
-	let headingColumnIndex = 1;
-	headingColumnNames.forEach(heading => {
-		ws.cell(1, headingColumnIndex++)
-			.string(heading)
-	});
-  
-	let rowIndex = 2;  
-	data.forEach( record => {
-		let columnIndex = 1;
-		Object.keys(record ).forEach(columnName =>{
-			ws.cell(rowIndex,columnIndex++)
-				.string(record [columnName])
-		});
-		rowIndex++;
-	}); 
-	wb.write('order.xlsx');
+    return wb.toFileAsync("./orderPass.xlsx", { password: "123" });
+  });
+	
 	return 200
-  }
+}
+
+  function createExcelOld (data) {
+    console.log('createExcel data =>',data)
+    const xl = require('excel4node');
+    const wb = new xl.Workbook();
+    const ws = wb.addWorksheet('order');
+    
+    const headingColumnNames = [
+      "No",
+      "Id User",
+      "Tanggal Pengambilan",
+      "Nama Pengirim",
+      "Telp Pengirim",
+      "Alamat Pengirim",
+      "Nama Penerima",
+      "Telp Penerima",
+      "Alamat Penerima",
+      "Jenis Barang",
+      "Jenis Pengiriman",
+      "Total",
+      "Pembayaran Oleh",
+      "Metode Pembayaran",
+      "Status",
+    ]
+    
+    //Write Column Title in Excel file
+    let headingColumnIndex = 1;
+    headingColumnNames.forEach(heading => {
+      ws.cell(1, headingColumnIndex++)
+        .string(heading)
+    });
+  
+    let rowIndex = 2;  
+    data.forEach( record => {
+      let columnIndex = 1;
+      Object.keys(record ).forEach(columnName =>{
+        ws.cell(rowIndex,columnIndex++)
+          .string(record [columnName])
+      });
+      rowIndex++;
+    }); 
+    wb.write('order.xlsx');
+    return 200
+    }
