@@ -68,6 +68,10 @@ const templateSchema = new Schema({
         type: String,
         required: true
     },
+    pickupDate: {
+        type: String,
+        required: true
+    },
     status: {
         type: String,
         required: true
@@ -100,6 +104,10 @@ const templateSchema = new Schema({
         type: String,
         required: false
     },    
+    note: {
+        type: String,
+        required: false
+    },        
     total: {
         type: String,
         required: false
