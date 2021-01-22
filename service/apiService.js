@@ -96,6 +96,7 @@ exports.getOrder = function (data) {
             'status': data.status
           }
         }
+
         if (data.transactionEndDate) {
           if (!data.transactionStartDate) {
             response = {
@@ -150,9 +151,11 @@ exports.getOrder = function (data) {
               'merchantName': checkIfNull(r.merchantName, ''),
               'merchantPhone': checkIfNull(r.merchantPhone, ''),
               'merchantAddress': checkIfNull(r.merchantAddress, ''),
+              'merchantDistrict': checkIfNull(r.merchantDistrict, ''),
               'receivertName': checkIfNull(r.receiverName, ''),
               'receiverPhone': checkIfNull(r.receiverPhone, ''),
               'receiverAddress': checkIfNull(r.receiverAddress, ''),
+              'receiverDistrict': checkIfNull(r.receiverDistrict, ''),
               'packageType': checkIfNull(r.packageType, ''),
               'serviceName': checkIfNull(r.serviceName, ''),
               'total': checkIfNull(r.total, ''),
@@ -161,7 +164,7 @@ exports.getOrder = function (data) {
               'note': checkIfNull(r.note, '')
             })
           });
-          var headingColumnNames = ["No", "Id User", "Tanggal Pengambilan", "Jam Pengambilan", "Nama Pengirim", "Telp Pengirim", "Alamat Pengirim", "Nama Penerima", "Telp Penerima", "Alamat Penerima", "Jenis Barang", "Jenis Pengiriman", "Total", "Pembayaran Oleh", "Metode Pembayaran", "Keterangan"];
+          var headingColumnNames = ["No", "Id User", "Tanggal Pengambilan", "Jam Pengambilan", "Nama Pengirim", "Telp Pengirim", "Alamat Pengirim", "Kec. Pengirim","Nama Penerima", "Telp Penerima", "Alamat Penerima", "Kec. Penerima", "Jenis Barang", "Jenis Pengiriman", "Total", "Pembayaran Oleh", "Metode Pembayaran", "Keterangan"];
           var ds = {
             fullname: "admin",
             category: 'exportOrder',
@@ -441,6 +444,27 @@ exports.postOrder = function (data) {
   return new Promise(async function (resolve, reject) {
     let res = {};
     try {
+      //getCity
+      var merchantDistrict='',receiverDistrict='';
+      if(data.merchantLat){
+        if(data.merchantLong){
+          var latlng = data.merchantLat+', '+data.merchantLong;
+          var gc = await getCity({latlng: latlng})
+          if(gc.responseCode=process.env.SUCCESS_RESPONSE){
+            merchantDistrict=gc.data;
+          }
+        }
+      }
+      if(data.receiverLat){
+        if(data.receiverLong){
+          var latlng = data.receiverLat+', '+data.receiverLong;
+          var gc = await getCity({latlng: latlng})
+          if(gc.responseCode=process.env.SUCCESS_RESPONSE){
+            receiverDistrict=gc.data;
+          }
+        }
+      }
+
       var orderReff = await getOrderReff();
       console.log('orderReff =>', orderReff)
       await mongoose.connect(mongoConf.mongoDb.url, {
@@ -458,11 +482,13 @@ exports.postOrder = function (data) {
         merchantPhone: data.merchantPhone,
         merchantLat: data.merchantLat,
         merchantLong: data.merchantLong,
+        merchantDistrict: merchantDistrict,
         receiverName: data.receiverName,
         receiverAddress: data.receiverAddress,
         receiverPhone: data.receiverPhone,
         receiverLat: data.receiverLat,
         receiverLong: data.receiverLong,
+        receiverDistrict:receiverDistrict,
         pickupTime: data.pickupTime,
         status: data.status,
         secretKey: data.secretKey,
@@ -1428,4 +1454,67 @@ function checkIfNull(text, changeTo = '') {
   } else {
     return text
   }
+}
+
+
+
+function getCity(data) {
+  return new Promise(async function (resolve, reject) {
+    try {
+      var kecamatan='';
+      // var ggc = await geoCode({key: 'AIzaSyCh_hAuQqKYeTnotA4lDZ2cSwyASdoUQYI', latlng: '-7.310065, 112.734571'});
+      var ggc = await geoCode({latlng: data.latlng});
+      var tmp = ggc.results[0].address_components;
+      tmp.forEach(r=>{
+        var o_name = r.long_name;
+        var l_name = o_name.toLowerCase();
+        var f_name = l_name.substring(0,9);
+        if(f_name == 'kecamatan') {
+          kecamatan=o_name.substring(10)
+          console.log('kecamatan =>',kecamatan);  
+          console.log('o_name =>',o_name);  
+        }
+      })
+      resolve({
+        responseCode: process.env.SUCCESS_RESPONSE,
+        data: kecamatan
+      });
+
+    } catch (e) {
+      console.log('Error when getKecamatan => ', e);
+      resolve({
+        responseCode: process.env.ERRORINTERNAL_RESPONSE,
+        responseMessage: 'Internal server error'
+      });
+    }
+  })
+}
+function geoCode(data) {
+  return new Promise(async function (resolve, reject) {
+    try {
+      data.key='AIzaSyCh_hAuQqKYeTnotA4lDZ2cSwyASdoUQYI';
+      request.post({
+        "headers": {},
+        "url": "https://maps.googleapis.com/maps/api/geocode/json?key="+data.key+"&latlng="+data.latlng,
+        "json": true
+      }, (error, response, body) => {
+        console.log('SENDING NOTIF EMAIL => ', body)
+        if (error) {
+          console.log('error bridging sending geoCode => ', error);
+          resolve({
+            responseCode: process.env.ERRORINTERNAL_RESPONSE,
+            responseMessage: 'Internal server error'
+          });
+        } else {
+          resolve(body);
+        }
+      })
+    } catch (e) {
+      console.log('Error when geoCode => ', e);
+      resolve({
+        responseCode: process.env.ERRORINTERNAL_RESPONSE,
+        responseMessage: 'Internal server error'
+      });
+    }
+  })
 }

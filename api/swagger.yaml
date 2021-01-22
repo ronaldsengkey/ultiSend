@@ -1711,9 +1711,12 @@ definitions:
       serviceName:
         type: "string"
         example: "sameDay, priority"
+      pickupDate:  
+        type: "string"
+        example: "2020-12-12"    
       pickupTime:  
         type: "string"
-        example: "2020-12-12 (09:00)"    
+        example: "09:00"    
       orderCode:
         type: "string"
         example: "UMPO20112353"    
@@ -1755,16 +1758,25 @@ definitions:
         example: "[{'name':'Ayam Kungpao','quantity':1}]"
       packageType:
         type: "string"
-        example: "Barang basah/Barang kering"
+        example: "Makanan Tahan Lama (Roti Kering) (Sedang)"
       paymentBy:
         type: "string"
-        example: "Ultimeal/.."
+        example: "Ultimeal"
       paymentMethod:
         type: "string"
-        example: "cash/.."
+        example: "Transfer"
+      secretKey:
+        type: "string"
+        example: "MjExOjExMTExMTo2Mjg1NjM0MDc4MzI="
       total:
         type: "string"
         example: "1000"
+      note:
+        type: "string"
+        example: "sudah :)"
+      userCreated:
+        type: "string"
+        example: "mimin"
         
   putOrderInquiry:
     type: "object"

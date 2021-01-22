@@ -34,7 +34,11 @@ const templateSchema = new Schema({
     merchantLong: {
         type: String,
         required: false
-    },    
+    },
+    merchantDistrict: {
+        type: String,
+        required: false
+    },
     receiverName: {
         type: String,
         required: true
@@ -55,7 +59,10 @@ const templateSchema = new Schema({
         type: String,
         required: false
     },
-
+    receiverDistrict: {
+        type: String,
+        required: false
+    },
     receiverImage: {
         type: String,
         required: false
