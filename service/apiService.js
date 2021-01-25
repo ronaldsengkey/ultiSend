@@ -137,8 +137,10 @@ exports.getOrder = function (data) {
           // if(gal.responseCode == process.env.SUCCESS_RESPONSE){
           //   adminLink = gal.data[0].employee_email;
           // }
-          var adminLink = 'phawiro@gmail.com';
-
+          if(data.profile.email) {
+            var adminLink = data.profile.email;
+          }
+          console.log('adminLink =>',adminLink)
           var dt = [];
           var i = 0;
           query.forEach(r => {
@@ -173,8 +175,7 @@ exports.getOrder = function (data) {
             headingColumnNames: headingColumnNames,
             record: JSON.stringify(dt)
           }
-          var se = await sendEmail(ds);
-          console.log('sendEmail =>', se)
+          var se = await sendEmail(ds);console.log('sendEmail =>', se)
           res.responseCode = se.responseCode;
           res.responseMessage = se.responseMessage;
           // var dSend = {

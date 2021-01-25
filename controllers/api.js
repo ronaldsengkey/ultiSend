@@ -725,6 +725,12 @@ module.exports.getOrder = async function getOrder(req, res, next) {
     default:
       // call signature validator
       if (await isValid.checkSignature() && await isValid.checkToken()) {
+        let data = await isValid.getData();
+        param.profile=data;
+        // console.log("data 1::", data);
+        // data = await accountService.getData(data);
+        // console.log("data 2::", data);
+    
         apiService
           .getOrder(param)
           .then(async function (response) {
