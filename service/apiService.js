@@ -7,6 +7,7 @@ var driverSchema = require('../config/driverSchema');
 var prioritySchema = require('../config/prioritySchema');
 var FormData = require('form-data');
 var fs = require('fs');
+const log = require('../config/log');
 
 const moment = require('moment');
 const request = require('request');
@@ -442,7 +443,17 @@ exports.getDriverOld = function (data) {
   });
 }
 exports.postOrder = function (data) {
+  console.log('postOrder data =>',data )
   return new Promise(async function (resolve, reject) {
+    var dt = {
+      "accessor": data.profile.username,
+      "accessorId": data.profile.phoneCode + '' + data.profile.phone + '_' + data.profile.deviceId,
+      "accessorAddress": data.profile.accAddress,
+      "accessorCategory": 'employee',
+      'link': data.profile.link,
+      'method': data.profile.method,
+      'moduleName': 'Create order request'
+    };
     let res = {};
     try {
       //getCity
@@ -507,6 +518,18 @@ exports.postOrder = function (data) {
       if (na) {
         res.responseCode = process.env.SUCCESS_RESPONSE;
         res.responseMessage = "New order created";
+
+        var activities = {
+          category: "Ultisend",
+          module: "Create Order",
+          description: "Create Order, data : (id) "+na._id + ", (receiverName) "+na.receiverName,
+          user_id: 0,
+          user_name: data.profile.email,
+          crud_id: 0
+        }
+        console.log('activities =>',activities)
+        dt.activities = activities;
+        log.addLog(dt);
       } else {
         res.responseCode = process.env.FAILED_RESPONSE;
         res.responseMessage = "Failed create order";
@@ -526,6 +549,15 @@ exports.postOrder = function (data) {
 exports.putOrder = function (data) {
   console.log('putOrder data =>', data)
   return new Promise(async function (resolve, reject) {
+    var dt = {
+      "accessor": data.profile.username,
+      "accessorId": data.profile.phoneCode + '' + data.profile.phone + '_' + data.profile.deviceId,
+      "accessorAddress": data.profile.accAddress,
+      "accessorCategory": 'employee',
+      'link': data.profile.link,
+      'method': data.profile.method,
+      'moduleName': 'Update order request'
+    };
     let res = {};
     try {
       await mongoose.connect(mongoConf.mongoDb.url, {
@@ -578,6 +610,18 @@ exports.putOrder = function (data) {
         if (na) {
           res.responseCode = process.env.SUCCESS_RESPONSE;
           res.responseMessage = "Order updated";
+          var activities = {
+            category: "Ultisend",
+            module: "Update Order",
+            description: "Update Order, data : (id) "+na._id + ", (status) "+data.status,
+            user_id: 0,
+            user_name: data.profile.email,
+            crud_id: 0
+          }
+          console.log('activities =>',activities)
+          dt.activities = activities;
+          log.addLog(dt);
+  
         } else {
           res.responseCode = process.env.FAILED_RESPONSE;
           res.responseMessage = "Failed updat order";
@@ -605,7 +649,18 @@ exports.deleteOrder = function (orderId) {
 }
 
 exports.assignOrderUpdate = function (data) {
+  console.log('assignOrderUpdate data =>',data)
   return new Promise(async function (resolve, reject) {
+    var dt = {
+      "accessor": data.profile.username,
+      "accessorId": data.profile.phoneCode + '' + data.profile.phone + '_' + data.profile.deviceId,
+      "accessorAddress": data.profile.accAddress,
+      "accessorCategory": 'employee',
+      'link': data.profile.link,
+      'method': data.profile.method,
+      'moduleName': 'Update assign order request'
+    };
+
     let res = {};
     var assignImage = '';
     // var bodyParser = require('body-parser');
@@ -700,7 +755,17 @@ exports.assignOrderUpdate = function (data) {
               res.responseCode = process.env.SUCCESS_RESPONSE;
               res.responseMessage = "Success, update assign order"
 
-
+              var activities = {
+                category: "Ultisend",
+                module: "Update Assign Order",
+                description: "Update Assign Order, data : (id) "+data.orderId + ", (status) "+data.status,
+                user_id: data.profile.id,
+                user_name: data.profile.email,
+                crud_id: 0
+              }
+              console.log('activities =>',activities)
+              dt.activities = activities;
+              log.addLog(dt);    
             } else {
               res.responseCode = process.env.FAILED_RESPONSE;
               res.responseMessage = "Failed update assign order";
@@ -800,6 +865,16 @@ exports.assignOrderUpdate = function (data) {
 exports.assignOrderPost = function (data) {
   console.log('assignOrderPost =>', data)
   return new Promise(async function (resolve, reject) {
+    var dt = {
+      "accessor": data.profile.username,
+      "accessorId": data.profile.phoneCode + '' + data.profile.phone + '_' + data.profile.deviceId,
+      "accessorAddress": data.profile.accAddress,
+      "accessorCategory": 'employee',
+      'link': data.profile.link,
+      'method': data.profile.method,
+      'moduleName': 'Assign order request'
+    };
+
     let res = {};
     var assignImage = '';
     try {
@@ -916,6 +991,16 @@ exports.assignOrderPost = function (data) {
           }
           res.responseCode = process.env.SUCCESS_RESPONSE;
           res.responseMessage = "Success, update assign order";
+          var activities = {
+            category: "Ultisend",
+            module: "Assign Order",
+            description: "Assign Order, data : (id) "+na._id + ", (status) "+data.status,
+            user_id: data.profile.id,
+            user_name: data.profile.email,
+            crud_id: 0
+          }
+          dt.activities = activities;
+          log.addLog(dt);
         } else {
           res.responseCode = process.env.FAILED_RESPONSE;
           res.responseMessage = "Failed update assign order";

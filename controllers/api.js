@@ -428,9 +428,18 @@ module.exports.postOrder = async function postOrder(req, res, next) {
     default:
       // call signature validator
       // if (await isValid.checkSignature() && await isValid.checkToken()) {
-      let cs = await checking.checkSignature(signature);
+      // let cs = await checking.checkSignature(signature);
+      let cs = await checking.checkSecretKey(signature);
+
+      console.log('checkSignature =>',cs);
       if (cs.responseCode == process.env.SUCCESS_RESPONSE) {
         data.status='pending';
+        // let data = await isValid.getData();
+        data.profile=cs.data;
+        data.profile.accAddress = req.headers.userIp + '_' + req.headers['user-agent'];
+        data.profile.link = req.url;
+        data.profile.method = req.method;
+
         apiService
           .postOrder(data)
           .then(function (response) {
@@ -474,8 +483,14 @@ module.exports.putOrder = async function putOrder(req, res, next) {
     case 2:
       break;
     default:
-      let cs = await checking.checkSignature(signature);
+      // let cs = await checking.checkSignature(signature);
+      let cs = await checking.checkSecretKey(signature);
       if (cs.responseCode == process.env.SUCCESS_RESPONSE) {
+        data.profile=cs.data;
+        data.profile.accAddress = req.headers.userIp + '_' + req.headers['user-agent'];
+        data.profile.link = req.url;
+        data.profile.method = req.method;
+
         apiService
           .putOrder(data)
           .then(function (response) {
@@ -562,7 +577,12 @@ module.exports.assignOrderPost = async function assignOrderPost(req, res, next) 
       if (await isValid.checkSignature() && await isValid.checkToken()) {
         // data.serviceName=service;
         data.status='Assign';
-
+        let profile = await isValid.getData();
+        var gas = await accountService.getData(profile);
+        if(gas.responseCode == process.env.SUCCESS_RESPONSE) {
+          profile.id = gas.data[0].employee_id
+        }
+        data.profile = profile;
         apiService
           .assignOrderPost(data)
           .then(function (response) {
@@ -660,6 +680,12 @@ module.exports.assignOrderUpdate = async function assignOrderUpdate(req, res, ne
     default:
       // call signature validator
       if (await isValid.checkSignature() && await isValid.checkToken()) {
+        let profile = await isValid.getData();
+        var gas = await accountService.getData(profile);
+        if(gas.responseCode == process.env.SUCCESS_RESPONSE) {
+          profile.id = gas.data[0].employee_id
+        }
+        data.profile = profile;        
         apiService
           .assignOrderUpdate(data)
           .then(function (response) {
@@ -684,26 +710,9 @@ module.exports.getOrder = async function getOrder(req, res, next) {
   var version = req.swagger.params["v"].value;
   var token = req.swagger.params["token"].value;
 
-  // signature = await asym.decrypterRsa(signature);
-  // if (!signature) {
-  //     utils.writeJson(res, {
-  //         responseCode: process.env.NOTACCEPT_RESPONSE,
-  //         responseMessage: "Unable to read signature",
-  //     });
-  //     return;
-  // }
   let clientKey = req.swagger.params['clientKey'].value;
   console.log('clientKey ye =>',clientKey)
-  // clientKey = await asym.decrypterRsa(clientKey);
-  // if (!clientKey) {
-  //     utils.writeJson(res, {
-  //         responseCode: process.env.NOTACCEPT_RESPONSE,
-  //         responseMessage: "Unable to read clientKey",
-  //     });
-  //     return;
-  // }
-  // console.log('clientKey =>',clientKey)
-  // let param = {}
+
   var param = req.swagger.params["param"].value;
   var service = req.swagger.params["service"].value;
   console.log('param =>',param)
@@ -727,7 +736,11 @@ module.exports.getOrder = async function getOrder(req, res, next) {
       if (await isValid.checkSignature() && await isValid.checkToken()) {
         let data = await isValid.getData();
         param.profile=data;
-        // console.log("data 1::", data);
+        param.profile.accAddress = req.headers.userIp + '_' + req.headers['user-agent'];
+        param.profile.link = req.url;
+        param.profile.method = req.method;
+
+        console.log("data 1::", data);
         // data = await accountService.getData(data);
         // console.log("data 2::", data);
     

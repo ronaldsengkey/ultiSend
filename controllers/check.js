@@ -81,7 +81,7 @@ exports.checkCustomerSignature = function (signature) {
 exports.checkSecretKey = function (secretKey) {
   return new Promise(async function (resolve, reject) {
     let result = {}
-    let svUrl = "http://" + process.env.AUTH_SERVICE_HOST + "/authentication/screetKeyValidation";
+    let svUrl = process.env.AUTH_SERVICE_HOST + "/screetKeyValidation";
     request.post({
       "headers": {
         "screetkey": secretKey
