@@ -722,6 +722,8 @@ module.exports.getOrder = async function getOrder(req, res, next) {
     if(param != "all") {
       param=JSON.parse(param);
       param.serviceName = service;
+    }else{
+      param={}
     }
   }
 

@@ -127,8 +127,8 @@ exports.getOrder = function (data) {
       });
       let query = await orderSchema.find(param).populate('assignId');
       await mongoose.connection.close();
-      console.log("query::", query[0].assignId["_id"]);
       if (query.length > 0) {
+        console.log("query::", query[0].assignId["_id"]);
         if (data.export) { //export
           //get email admin link
           var adminLink = 'phawiro@gmail.com';
