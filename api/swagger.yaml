@@ -1296,6 +1296,73 @@ paths:
                 description: unauthorize.
       x-swagger-router-controller: "api"
 
+  /ext/priority:
+    get:
+      tags:
+        - "api"
+      summary: "get priority time request"
+      description: "Priority time request from others app"
+      operationId: "getPriority"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "clientKey"
+          in: "header"
+          required: false
+          type: "string"
+        - name: "signature"
+          in: "header"
+          required: false
+          type: "string"
+        - name: "token"
+          in: "header"
+          required: false
+          type: "string"
+        - name: "v"
+          in: "query"
+          description: "version api"
+          required: true
+          type: "integer"
+          default: 1
+          minimum: 1
+
+      responses:
+        "200":
+          description: "Account post response"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: text description.
+        "401":
+          description: "Invalidunauthorize"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+        "500":
+          description: "Internal server error"
+          schema:
+            type: object
+            properties:
+              responseCode:
+                type: integer
+                description: code of response.
+              responseText:
+                type: string
+                description: unauthorize.
+      x-swagger-router-controller: "api"
+
   /api/priority:
     get:
       tags:

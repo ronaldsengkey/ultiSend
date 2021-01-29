@@ -1218,10 +1218,23 @@ module.exports.getPriority = async function getPriority(req, res, next) {
           });
       }
       else{
-        utils.writeJson(res, {
-          responseCode: 401,
-          responseMessage: "Unauthorize"
-        });
+        //cek with secretkey
+        let cs = await checking.checkSecretKey(signature);
+        if (cs.responseCode == process.env.SUCCESS_RESPONSE) {
+          apiService
+          .getPriority(param)
+          .then(async function (response) {
+            utils.writeJson(res, response);
+          })
+          .catch(function (response) {
+            utils.writeJson(res, response);
+          });
+        }else{
+          utils.writeJson(res, {
+            responseCode: 401,
+            responseMessage: "Unauthorize"
+          });
+        }
       }
       break;
   }
