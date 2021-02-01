@@ -1550,21 +1550,31 @@ function getCity(data) {
       var kecamatan='';
       // var ggc = await geoCode({key: 'AIzaSyCh_hAuQqKYeTnotA4lDZ2cSwyASdoUQYI', latlng: '-7.310065, 112.734571'});
       var ggc = await geoCode({latlng: data.latlng});
-      var tmp = ggc.results[0].address_components;
-      tmp.forEach(r=>{
-        var o_name = r.long_name;
-        var l_name = o_name.toLowerCase();
-        var f_name = l_name.substring(0,9);
-        if(f_name == 'kecamatan') {
-          kecamatan=o_name.substring(10)
-          console.log('kecamatan =>',kecamatan);  
-          console.log('o_name =>',o_name);  
-        }
-      })
-      resolve({
-        responseCode: process.env.SUCCESS_RESPONSE,
-        data: kecamatan
-      });
+      console.log('geoCode =>',ggc)
+      if(ggc.results.length>0) {
+        //check if null
+        var tmp = ggc.results[0].address_components;
+        tmp.forEach(r=>{
+          var o_name = r.long_name;
+          var l_name = o_name.toLowerCase();
+          var f_name = l_name.substring(0,9);
+          if(f_name == 'kecamatan') {
+            kecamatan=o_name.substring(10)
+            console.log('kecamatan =>',kecamatan);  
+            console.log('o_name =>',o_name);  
+          }
+        })
+        resolve({
+          responseCode: process.env.SUCCESS_RESPONSE,
+          data: kecamatan
+        });
+      }else{
+        resolve({
+          responseCode: process.env.NOTFOUND_RESPONSE,
+          data: ''
+        });
+
+      }
 
     } catch (e) {
       console.log('Error when getKecamatan => ', e);
@@ -1584,7 +1594,7 @@ function geoCode(data) {
         "url": "https://maps.googleapis.com/maps/api/geocode/json?key="+data.key+"&latlng="+data.latlng,
         "json": true
       }, (error, response, body) => {
-        console.log('SENDING NOTIF EMAIL => ', body)
+        console.log('SENDING geoCode => ', body)
         if (error) {
           console.log('error bridging sending geoCode => ', error);
           resolve({
