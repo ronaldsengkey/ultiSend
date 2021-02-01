@@ -126,18 +126,12 @@ exports.getOrder = function (data) {
         useNewUrlParser: true
       });
       let query = await orderSchema.find(param).populate('assignId');
+      // console.log("query::", query[0]);
       await mongoose.connection.close();
       if (query.length > 0) {
-        console.log("query::", query[0].assignId["_id"]);
         if (data.export) { //export
           //get email admin link
           var adminLink = 'phawiro@gmail.com';
-          // var a = {"companyProfileName":"linkx", "AuthId": "1", "accountStatus":"1"}
-          // var gal = await getAdminLink(a);
-          // console.log('getAdminLink =>',gal)
-          // if(gal.responseCode == process.env.SUCCESS_RESPONSE){
-          //   adminLink = gal.data[0].employee_email;
-          // }
           if(data.profile.email) {
             var adminLink = data.profile.email;
           }
@@ -1550,7 +1544,7 @@ function getCity(data) {
       var kecamatan='';
       // var ggc = await geoCode({key: 'AIzaSyCh_hAuQqKYeTnotA4lDZ2cSwyASdoUQYI', latlng: '-7.310065, 112.734571'});
       var ggc = await geoCode({latlng: data.latlng});
-      console.log('geoCode =>',ggc)
+      // console.log('geoCode =>',ggc)
       if(ggc.results.length>0) {
         //check if null
         var tmp = ggc.results[0].address_components;
