@@ -73,7 +73,7 @@ const templateSchema = new Schema({
     },
     pickupTime: {
         type: String,
-        required: true
+        required: false
     },
     pickupDate: {
         type: String,
