@@ -93,6 +93,7 @@ exports.getOrder = function (data) {
           }
         }
         if (data.status) {
+          if(data.status=='Pending'){data.status='pending'}
           pStatus = {
             'status': data.status
           }
