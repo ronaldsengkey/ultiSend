@@ -466,6 +466,7 @@ exports.postOrder = function (data) {
         if(data.receiverLong){
           var latlng = data.receiverLat+', '+data.receiverLong;
           var gc = await getCity({latlng: latlng})
+          console.log('receiverLong =>',gc)
           if(gc.responseCode=process.env.SUCCESS_RESPONSE){
             receiverDistrict=gc.data;
           }
@@ -1554,11 +1555,19 @@ function getCity(data) {
           var l_name = o_name.toLowerCase();
           var f_name = l_name.substring(0,9);
           if(f_name == 'kecamatan') {
-            kecamatan=o_name.substring(10)
-            console.log('kecamatan =>',kecamatan);  
-            console.log('o_name =>',o_name);  
+            kecamatan=o_name.substring(10);
+            // console.log('kecamatan =>',kecamatan);  
+            // console.log('o_name =>',o_name);  
           }
         })
+        if(kecamatan==''){//procces by types
+          tmp.forEach(r=>{
+            var o_name = r.long_name;
+            if(r.types[0] == 'administrative_area_level_3') {
+              kecamatan=o_name;
+            }
+          })
+        }
         resolve({
           responseCode: process.env.SUCCESS_RESPONSE,
           data: kecamatan
