@@ -111,12 +111,18 @@ exports.getOrder = function (data) {
             console.log('tomtomtom=>', tom)
             var tom = '';
             tom = data.transactionEndDate;
+            // pDate = {
+            //   "createdDate": {
+            //     "$gte": new Date(data.transactionStartDate),
+            //     "$lte": new Date(tom)
+            //   }
+            // };
             pDate = {
-              "createdDate": {
-                "$gte": new Date(data.transactionStartDate),
-                "$lte": new Date(tom)
+              "pickupDate": {
+                "$gte": data.transactionStartDate,
+                "$lte": data.transactionEndDate,
               }
-            };
+            };            
           }
         }
         var param = extend({}, pId, pMN, pMP, pRN, pRP, pSV, pOC, pOR, pAN, pStatus, pDate);
@@ -514,12 +520,13 @@ exports.postOrder = function (data) {
       if (na) {
         res.responseCode = process.env.SUCCESS_RESPONSE;
         res.responseMessage = "New order created";
-
+        var employee_id=0;
+        if(data.profile.employee_id){employee_id=data.profile.employee_id}
         var activities = {
           category: "Ultisend",
           module: "Create Order",
           description: "Create Order, data : (id) "+na._id + ", (receiverName) "+na.receiverName,
-          user_id: 0,
+          user_id: employee_id,
           user_name: data.profile.email,
           crud_id: 0
         }

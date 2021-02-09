@@ -433,12 +433,24 @@ module.exports.postOrder = async function postOrder(req, res, next) {
 
       console.log('checkSignature =>',cs);
       if (cs.responseCode == process.env.SUCCESS_RESPONSE) {
+        
         data.status='pending';
-        // let data = await isValid.getData();
         data.profile=cs.data;
         data.profile.accAddress = req.headers.userIp + '_' + req.headers['user-agent'];
         data.profile.link = req.url;
         data.profile.method = req.method;
+        //get dataAccount
+        var p = {
+          'phoneCode': cs.data.phoneCode,
+          'phone': cs.data.phone,
+          'email': cs.data.email,
+          'accountCategory': 'employee'
+        }
+        let gda = await accountService.getDataTemp(p);
+        console.log("get Data Employe =>", gda.responseCode);
+        if(gda.responseCode == process.env.SUCCESS_RESPONSE){
+          data.profile.employee_id = gda.data[0].employee_id;
+        }
 
         apiService
           .postOrder(data)
