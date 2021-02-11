@@ -1242,6 +1242,7 @@ module.exports.getPriority = async function getPriority(req, res, next) {
       break;
     default:
       if (await isValid.checkSignature()) {
+        console.log('getPriority isValid checkSignature')
         apiService
           .getPriority(param)
           .then(async function (response) {
@@ -1251,11 +1252,13 @@ module.exports.getPriority = async function getPriority(req, res, next) {
             utils.writeJson(res, response);
           })
           .catch(function (response) {
+            console.log('catch checkSignature response=>',response)
             utils.writeJson(res, response);
           });
       }
       else{
         //cek with secretkey
+        console.log('getPriority checking checkSecretKey')
         let cs = await checking.checkSecretKey(signature);
         if (cs.responseCode == process.env.SUCCESS_RESPONSE) {
           apiService
@@ -1264,6 +1267,7 @@ module.exports.getPriority = async function getPriority(req, res, next) {
             utils.writeJson(res, response);
           })
           .catch(function (response) {
+            console.log('catch checkSecretKey response=>',response)
             utils.writeJson(res, response);
           });
         }else{
