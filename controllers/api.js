@@ -17,129 +17,154 @@ const driverDivisionId = '9'; //division id driver from postgreq
 // validator for signature and token
 
 module.exports.accountPost = async function accountPost(req, res, next) {
-  var signature = req.swagger.params["signature"].value;
-  var version = req.swagger.params["v"].value;
-  var token = req.swagger.params["token"].value;
-  var flowEntry = req.swagger.params["flowEntry"].value;
-  // var data = req.swagger.params["body"].value;
-  let photo = req.swagger.params["photo"].value;
-  let cardImage = req.swagger.params["cardImage"].value;
-  let data = {
-    email: req.swagger.params["email"].value,
-    password: req.swagger.params["password"].value,
-    fullName: req.swagger.params["fullName"].value,
-    company: req.swagger.params["company"].value,
-    deviceId: req.swagger.params["deviceId"].value,
-    phoneCode: req.swagger.params["phoneCode"].value,
-    phone: req.swagger.params["phone"].value,
-    id_number: req.swagger.params["id_number"].value,
-    vehicleInfo: req.swagger.params["vehicleInfo"].value
-  }
+  try {
+    var signature = req.swagger.params["signature"].value;
+    var version = req.swagger.params["v"].value;
+    var token = req.swagger.params["token"].value;
+    var flowEntry = req.swagger.params["flowEntry"].value;
+    // var data = req.swagger.params["body"].value;
+    let photo = req.swagger.params["photo"].value;
+    let cardImage = req.swagger.params["cardImage"].value;
+    let data = {
+      email: req.swagger.params["email"].value,
+      password: req.swagger.params["password"].value,
+      fullName: req.swagger.params["fullName"].value,
+      company: req.swagger.params["company"].value,
+      deviceId: req.swagger.params["deviceId"].value,
+      phoneCode: req.swagger.params["phoneCode"].value,
+      phone: req.swagger.params["phone"].value,
+      id_number: req.swagger.params["id_number"].value,
+      vehicleInfo: req.swagger.params["vehicleInfo"].value
+    }
 
-  isValid = new validator(signature, token);
+    isValid = new validator(signature, token);
 
-  data = await isValid.decryptObjectData(data);
-  // console.log("data::", data);
-  if (!data) {
-    return utils.writeJson(res, {
-      responseCode: 406,
-      responseMessage: "Unable to read data"
+    data = await isValid.decryptObjectData(data);
+    // console.log("data::", data);
+    if (!data) {
+      return utils.writeJson(res, {
+        responseCode: 406,
+        responseMessage: "Unable to read data"
+      })
+    }
+    switch (version) {
+      case 2:
+        break;
+      default:
+        // call signature validator
+        // if (await isValid.checkSignature()) {
+        if (await isValid.checkSignature() && await isValid.checkToken()) {
+          var profile='';
+          let userData = await isValid.getData();
+          console.log('userData =>',userData)
+          userData = await accountService.getData(userData);
+          console.log('userData 2 =>',userData)
+          if (userData.responseCode == process.env.SUCCESS_RESPONSE) {
+            var profile = {
+              email: userData.data[0].employee_email,
+              phone: userData.data[0].employee_phone,
+              employee_id: userData.data[0].employee_id,
+            }
+          }
+          console.log("profile =>", profile);          
+
+          if (flowEntry == 'ultisend') {
+            data.division_id = driverDivisionId //driver
+            data.id_type = 'k'
+          }
+          data.signature = "null";
+          data.scopes = "null";
+          data.roles = "null";
+          data.accountPriority = "employee";
+          data.appId = isValid.appId;
+          data.userType = "ultisend";
+          data.company_profile_id = data.company;
+          console.log("data::", data);
+          let regis = await accountService.register(data);
+          console.log("regis::", regis);
+          if (regis.responseCode != process.env.SUCCESS_RESPONSE) {
+            return utils.writeJson(res, regis);
+          }
+          let body = {
+            'phoneCode': data.phoneCode,
+            'phone': data.phone,
+            'accountCategory': 'employee',
+            'confirmationStatus': '0',
+            'company_profile_id': data.company,
+            'division_id': driverDivisionId,
+          }
+          console.log("body::", body);
+          let dataTemp = await accountService.getDataTemp(body);
+          console.log("dataTemp::", dataTemp);
+          if (dataTemp.responseCode != process.env.SUCCESS_RESPONSE) {
+            return utils.writeJson(res, dataTemp);
+          }
+          body = {
+            "phone": data.phone,
+            'phoneCode': data.phoneCode,
+            'accountPriority': dataTemp.data[0].accountCategory,
+            'otpCode': dataTemp.data[0].confirmationCode,
+            'category': "confirm",
+            'profile': profile,
+          };
+          let dataConfirm = await accountService.confirmDataEmployee(body);
+          console.log("dataConfirm::", dataConfirm);
+          if (dataConfirm.responseCode != process.env.SUCCESS_RESPONSE) {
+            return utils.writeJson(res, dataConfirm);
+          }
+          userData = await accountService.getData(body);
+          console.log("userData::", userData);
+          if (userData.responseCode != process.env.SUCCESS_RESPONSE) {
+            return utils.writeJson(res, userData);
+          }
+          body = {
+            ownerId: userData.data[0].employee_id,
+            scope: 'profile',
+            behalf: 'ultisend',
+            file: photo
+          }
+          photo = await backendService.uploadFile(body);
+          console.log("photo::", photo);
+          body = {
+            ownerId: userData.data[0].employee_id,
+            scope: 'cardImage',
+            behalf: 'ultisend',
+            file: cardImage
+          }
+          cardImage = await backendService.uploadFile(body);
+          console.log("cardImage::", cardImage);
+
+          body = {
+            "driverId": userData.data[0].employee_id,
+            "driverName": userData.data[0].employee_name,
+            "driverPhone": data.phoneCode + userData.data[0].employee_phone,
+            "driverAddress": userData.data[0].employee_address,
+            "driverEmail": userData.data[0].employee_email,
+            "driverVehicleInfo": dataTemp.data[0].vehicleInfo,
+            "driverImage": photo.data[0].path,
+            "cardImage": cardImage.data[0].path,
+            "driverStatus": 'off'
+          }
+          // console.log("body::", body);
+          let result = await apiService.postDriver(body);
+          // console.log("result::", result);
+          utils.writeJson(res, result);
+        } else {
+          utils.writeJson(res, {
+            responseCode: 401,
+            responseMessage: "Unauthorize"
+          })
+        }
+        break;
+    }
+  } catch (e) {
+    console.log('Error accountPost => ', e);
+
+    utils.writeJson(res, {
+      responseCode: process.env.ERRORINTERNAL_RESPONSE,
+      responseMessage: "Internal server error!"
     })
-  }
-  switch (version) {
-    case 2:
-      break;
-    default:
-      // call signature validator
-      if (await isValid.checkSignature()) {
-        if (flowEntry == 'ultisend') {
-          data.division_id = driverDivisionId //driver
-          data.id_type = 'k'
-        }
-        data.signature = "null";
-        data.scopes = "null";
-        data.roles = "null";
-        data.accountPriority = "employee";
-        data.appId = isValid.appId;
-        data.userType = "ultisend";
-        data.company_profile_id = data.company;
-        console.log("data::", data);
-        let regis = await accountService.register(data);
-        console.log("regis::", regis);
-        if (regis.responseCode != process.env.SUCCESS_RESPONSE) {
-          return utils.writeJson(res, regis);
-        }
-        let body = {
-          'phoneCode': data.phoneCode,
-          'phone': data.phone,
-          'accountCategory': 'employee',
-          'confirmationStatus': '0',
-          'company_profile_id': data.company,
-          'division_id': driverDivisionId,
-        }
-        console.log("body::", body);
-        let dataTemp = await accountService.getDataTemp(body);
-        console.log("dataTemp::", dataTemp);
-        if (dataTemp.responseCode != process.env.SUCCESS_RESPONSE) {
-          return utils.writeJson(res, dataTemp);
-        }
-        body = {
-          "phone": data.phone,
-          'phoneCode': data.phoneCode,
-          'accountPriority': dataTemp.data[0].accountCategory,
-          'otpCode': dataTemp.data[0].confirmationCode,
-          'category': "confirm",
-        };
-        let dataConfirm = await accountService.confirmDataEmployee(body);
-        console.log("dataConfirm::", dataConfirm);
-        if (dataConfirm.responseCode != process.env.SUCCESS_RESPONSE) {
-          return utils.writeJson(res, dataConfirm);
-        }
-        let userData = await accountService.getData(body);
-        console.log("userData::", userData);
-        if (userData.responseCode != process.env.SUCCESS_RESPONSE) {
-          return utils.writeJson(res, userData);
-        }
-        body = {
-          ownerId: userData.data[0].employee_id,
-          scope: 'profile',
-          behalf: 'ultisend',
-          file: photo
-        }
-        photo = await backendService.uploadFile(body);
-        console.log("photo::", photo);
-        body = {
-          ownerId: userData.data[0].employee_id,
-          scope: 'cardImage',
-          behalf: 'ultisend',
-          file: cardImage
-        }
-        cardImage = await backendService.uploadFile(body);
-        console.log("cardImage::", cardImage);
-
-        body = {
-          "driverId": userData.data[0].employee_id,
-          "driverName": userData.data[0].employee_name,
-          "driverPhone": data.phoneCode + userData.data[0].employee_phone,
-          "driverAddress": userData.data[0].employee_address,
-          "driverEmail": userData.data[0].employee_email,
-          "driverVehicleInfo": dataTemp.data[0].vehicleInfo,
-          "driverImage": photo.data[0].path,
-          "cardImage": cardImage.data[0].path,
-          "driverStatus": 'off'
-        }
-        // console.log("body::", body);
-        let result = await apiService.postDriver(body);
-        // console.log("result::", result);
-        utils.writeJson(res, result);
-      } else {
-        utils.writeJson(res, {
-          responseCode: 401,
-          responseMessage: "Unauthorize"
-        })
-      }
-      break;
-  }
+  }    
 };
 
 module.exports.accountGet = async function accountGet(req, res){
