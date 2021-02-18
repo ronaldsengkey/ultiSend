@@ -150,7 +150,7 @@ exports.getOrder = function (data) {
             i++;
             dt.push({
               'no': i.toString(),
-              'orderCode': checkIfNull(r.orderCode, ''),
+              'orderCode': checkIfNull(r.orderCode, ''), 
               'merchantId': checkIfNull(r.merchantId, ''),
               'pickupDate': checkIfNull(r.pickupDate, ''),
               'pickupTime': checkIfNull(r.pickupTime, ''),
