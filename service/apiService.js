@@ -410,13 +410,21 @@ exports.getDriver = function (data) {
   });
 }
 exports.postAccount = function (data) {
-  // console.log('postDriver =>',data)
+  console.log('postAccount data =>',data)
   return new Promise(async function (resolve, reject) {
     let res = {};
     try {
-      var cd = await checkAccount({
-        "employe_id": data.employe_id
-      });
+      var cd = [];
+      if(data.employe_id){
+        var cd = await checkAccount({
+          "employee_id": data.employee_id
+        });
+      }else if(data.employe_email){
+        var cd = await checkAccount({
+          "employee_id": data.employee_id
+        });
+      }
+      console.log('cd.length =>',cd.length)
       if (cd.length > 0) {
         res.responseCode = process.env.FAILED_RESPONSE;
         res.responseMessage = "Failed account created";
