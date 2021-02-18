@@ -4,6 +4,7 @@ var mongoConf = require('../config/mongo');
 var orderSchema = require('../config/orderSchema');
 var orderLogSchema = require('../config/orderLogSchema');
 var driverSchema = require('../config/driverSchema');
+var accountSchema = require('../config/accountSchema');
 var prioritySchema = require('../config/prioritySchema');
 var FormData = require('form-data');
 var fs = require('fs');
@@ -133,7 +134,7 @@ exports.getOrder = function (data) {
         useNewUrlParser: true
       });
       let query = await orderSchema.find(param).populate('assignId');
-      // console.log("query::", query[0]);
+      // console.log("query =>", query[0]);
       await mongoose.connection.close();
       if (query.length > 0) {
         if (data.export) { //export
@@ -149,6 +150,7 @@ exports.getOrder = function (data) {
             i++;
             dt.push({
               'no': i.toString(),
+              'orderCode': checkIfNull(r.orderCode, ''),
               'merchantId': checkIfNull(r.merchantId, ''),
               'pickupDate': checkIfNull(r.pickupDate, ''),
               'pickupTime': checkIfNull(r.pickupTime, ''),
@@ -168,7 +170,7 @@ exports.getOrder = function (data) {
               'note': checkIfNull(r.note, '')
             })
           });
-          var headingColumnNames = ["No", "Id User", "Tanggal Pengambilan", "Jam Pengambilan", "Nama Pengirim", "Telp Pengirim", "Alamat Pengirim", "Kec. Pengirim","Nama Penerima", "Telp Penerima", "Alamat Penerima", "Kec. Penerima", "Jenis Barang", "Jenis Pengiriman", "Total", "Pembayaran Oleh", "Metode Pembayaran", "Keterangan"];
+          var headingColumnNames = ["No", "Order Id", "Id User", "Tanggal Pengambilan", "Jam Pengambilan", "Nama Pengirim", "Telp Pengirim", "Alamat Pengirim", "Kec. Pengirim","Nama Penerima", "Telp Penerima", "Alamat Penerima", "Kec. Penerima", "Jenis Barang", "Jenis Pengiriman", "Total", "Pembayaran Oleh", "Metode Pembayaran", "Keterangan"];
           var ds = {
             fullname: "admin",
             category: 'exportOrder',
@@ -405,6 +407,142 @@ exports.getDriver = function (data) {
 
     }
     // resolve();
+  });
+}
+exports.postAccount = function (data) {
+  // console.log('postDriver =>',data)
+  return new Promise(async function (resolve, reject) {
+    let res = {};
+    try {
+      var cd = await checkAccount({
+        "employe_id": data.employe_id
+      });
+      if (cd.length > 0) {
+        res.responseCode = process.env.FAILED_RESPONSE;
+        res.responseMessage = "Failed account created";
+      } else {
+        await mongoose.connect(mongoConf.mongoDb.url, {
+          useNewUrlParser: true
+        });
+        let newApi = new accountSchema({
+          company_id: data.company_id,
+          company_name: data.company_name,
+          employee_id: data.employee_id,
+          employee_name: data.employee_name,
+          auth_id: data.auth_id,
+          division_id: data.division_id,
+          division_name: data.division_name,
+          employee_phone: data.employee_phone,
+          employee_email: data.employee_email,
+        });
+        let na = await newApi.save();        
+        await mongoose.connection.close();
+        if (na) {
+          res.responseCode = process.env.SUCCESS_RESPONSE;
+          res.responseMessage = "New account created";
+        } else {
+          res.responseCode = process.env.FAILED_RESPONSE;
+          res.responseMessage = "Failed account order";
+        }
+      }
+      resolve(res);
+
+    } catch (err) {
+      console.log('Error for create order ==> ', err)
+      res = {
+        'responseCode': process.env.ERRORINTERNAL_RESPONSE,
+        'responseMessage': 'Internal server error'
+      }
+      resolve(res);
+    }
+  });
+}
+exports.putAccount = function (data) {
+  console.log('putAccount =>', data)
+  return new Promise(async function (resolve, reject) {
+    let res = {};
+    try {
+      if (data._id) {
+        var cd = await checkAccount({
+          "_id": data._id
+        });
+      } else {
+        var cd = await checkAccount({
+          "employee_email": data.employee_email
+        });
+      }
+      if (cd.length > 0) {
+        await mongoose.connect(mongoConf.mongoDb.url, {
+          useNewUrlParser: true
+        });
+
+        let vCompId = {}, vCompName = {}, vEmployeeId = {}, vEmpName = {}, vDivId = {}, vEmpPhone = {}, vEmpEmail = {};
+        if (data.driverName) {
+          vCompId = {
+            'company_id': data.company_id
+          }
+        }
+        if (data.driverPhone) {
+          vCompName = {
+            'company_name': data.company_name
+          }
+        }
+        if (data.driverAddress) {
+          vEmpId = {
+            'employee_id': data.employee_id
+          }
+        }
+        if (data.driverEmail) {
+          vEmpName = {
+            'employee_name': data.employee_name
+          }
+        }
+        if (data.driverVehicleInfo) {
+          vDivId = {
+            'division_id': data.division_id
+          }
+        }
+        if (data.driverStatus) {
+          vEmpPhone = {
+            'employee_phone': data.employee_phone
+          }
+        }
+        if (data.extId) {
+          vEmpEmail = {
+            'employee_email': data.employee_email
+          }
+        }
+
+        var value = extend({}, vCompId, vCompName, vEmpId, vDivId, vEmpName, vEmpPhone, vEmpEmail);
+        let na = await driverSchema.findOneAndUpdate({
+          "_id": cd[0]._id
+        }, {
+          $set: value
+        }, {
+          useFindAndModify: false
+        });
+        await mongoose.connection.close();
+        if (na) {
+          res.responseCode = process.env.SUCCESS_RESPONSE;
+          res.responseMessage = "Account updated";
+        } else {
+          res.responseCode = process.env.FAILED_RESPONSE;
+          res.responseMessage = "Failed account update";
+        }
+      } else {
+        res.responseCode = process.env.FAILED_RESPONSE;
+        res.responseMessage = "Failed account update";
+      }
+      resolve(res);
+
+    } catch (err) {
+      console.log('Error for update account ==> ', err)
+      res = {
+        'responseCode': process.env.ERRORINTERNAL_RESPONSE,
+        'responseMessage': 'Internal server error'
+      }
+      resolve(res);
+    }
   });
 }
 exports.getDriverOld = function (data) {
@@ -1164,7 +1302,14 @@ async function checkDriver(param) {
   await mongoose.connection.close();
   return query;
 }
-
+async function checkAccount(param) {
+  await mongoose.connect(mongoConf.mongoDb.url, {
+    useNewUrlParser: true
+  });
+  let query = await accountSchema.find(param);
+  await mongoose.connection.close();
+  return query;
+}
 function getEmployee(data) {
   return new Promise(function (resolve, reject) {
     try {

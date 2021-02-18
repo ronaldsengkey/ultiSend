@@ -17,6 +17,7 @@ const driverDivisionId = '9'; //division id driver from postgreq
 // validator for signature and token
 
 module.exports.accountPost = async function accountPost(req, res, next) {
+  console.log('accountPost')
   try {
     var signature = req.swagger.params["signature"].value;
     var version = req.swagger.params["v"].value;
@@ -54,7 +55,7 @@ module.exports.accountPost = async function accountPost(req, res, next) {
         // call signature validator
         // if (await isValid.checkSignature()) {
         if (await isValid.checkSignature() && await isValid.checkToken()) {
-          var profile='';
+          var profile='', pAccount='';
           let userData = await isValid.getData();
           console.log('userData =>',userData)
           userData = await accountService.getData(userData);
@@ -124,7 +125,7 @@ module.exports.accountPost = async function accountPost(req, res, next) {
             file: photo
           }
           photo = await backendService.uploadFile(body);
-          console.log("photo::", photo);
+          // console.log("photo::", photo);
           body = {
             ownerId: userData.data[0].employee_id,
             scope: 'cardImage',
@@ -132,7 +133,7 @@ module.exports.accountPost = async function accountPost(req, res, next) {
             file: cardImage
           }
           cardImage = await backendService.uploadFile(body);
-          console.log("cardImage::", cardImage);
+          // console.log("cardImage::", cardImage);
 
           body = {
             "driverId": userData.data[0].employee_id,
@@ -145,8 +146,23 @@ module.exports.accountPost = async function accountPost(req, res, next) {
             "cardImage": cardImage.data[0].path,
             "driverStatus": 'off'
           }
-          // console.log("body::", body);
+          console.log("body::", body);
           let result = await apiService.postDriver(body);
+          pAccount = {
+            "company_id": userData.data[0].company_id,
+            "company_name": userData.data[0].company_name,
+            "employee_id": userData.data[0].employee_id,
+            "employee_name": userData.data[0].employee_name,
+            "auth_id": userData.data[0].auth_id,
+            "division_id": userData.data[0].division_id,
+            "division_name": userData.data[0].division_name,
+            "employee_phone": userData.data[0].employee_phone,
+            "employee_email": userData.data[0].employee_email
+          }            
+          console.log("pAccount =>", pAccount);
+          let pa = await apiService.postAccount(pAccount);
+          console.log('postAccount =>',pa)
+
           // console.log("result::", result);
           utils.writeJson(res, result);
         } else {
@@ -168,7 +184,6 @@ module.exports.accountPost = async function accountPost(req, res, next) {
 };
 
 module.exports.accountGet = async function accountGet(req, res){
-  console.log("accountGet: ");
   var signature = req.swagger.params["signature"].value;
   var version = req.swagger.params["v"].value;
   var token = req.swagger.params["token"].value;
@@ -178,23 +193,27 @@ module.exports.accountGet = async function accountGet(req, res){
   let flowEntry = req.swagger.params['flowEntry'].value;
   let body = {};
   // var data = req.swagger.params["body"].value;
-
+  console.log("category::", category);
   isValid = new validator(signature, token, authorization);
   if (await isValid.checkSignature() && await isValid.checkToken()) {
     let data = await isValid.getData();
-    data = await accountService.getData(data);
-    console.log("data::", data);
+    console.log("data data::", data);
+    // data = await accountService.getData(data);
+    data = await accountService.getDataAccount(data);
+    console.log("accountGet data::", data);
     if (data.responseCode != process.env.SUCCESS_RESPONSE) {
       return utils.writeJson(res, data);
     }
-    if (category == "temp") {
-      body = {
-        'confirmationStatus': '0',
-        'company_profile_id': data.data[0].company_id,
-        'division_id': driverDivisionId,
-      }
-      data = await accountService.getDataTemp(body);
-    }
+
+    // if (category == "temp") {
+    //   body = {
+    //     'confirmationStatus': '0',
+    //     'company_profile_id': data.data[0].company_id,
+    //     'division_id': driverDivisionId,
+    //   }
+    //   data = await accountService.getDataTemp(body);
+    //   console.log("accountGet =>",data);
+    // }
     if (data.data && flowEntry == 'ultisend') {
       console.log("data::", data);
       data.data = await asym.encryptArrayObjectRsa(data.data, clientKey);
@@ -267,6 +286,19 @@ module.exports.accountUpdate = async function accountUpdate(req, res){
       console.log("body::", body);
       let result = await apiService.postDriver(body);
       console.log("result::", result);
+      body = {
+        "company_id": userData.data[0].company_id,
+        "company_name": userData.data[0].company_name,
+        "employee_id": userData.data[0].employee_id,
+        "employee_name": userData.data[0].employee_name,
+        "auth_id": userData.data[0].auth_id,
+        "division_id": userData.data[0].division_id,
+        "division_name": userData.data[0].division_name,
+        "employee_phone": userData.data[0].employee_phone,
+        "employee_email": userData.data[0].employee_email
+  }
+      let pa = await apiService.postAccount(body);
+
     }
     else if(data.confirmation == "no"){
       let body = {
@@ -276,7 +308,7 @@ module.exports.accountUpdate = async function accountUpdate(req, res){
         'otpCode': "no",
         'category': "confirm",
       };
-      console.log("body::", body);
+      console.log("confirmDataEmployee body::", body);
       let dataConfirm = await accountService.confirmDataEmployee(body);
       utils.writeJson(res, dataConfirm);
     }
@@ -471,7 +503,9 @@ module.exports.postOrder = async function postOrder(req, res, next) {
           'email': cs.data.email,
           'accountCategory': 'employee'
         }
-        let gda = await accountService.getDataTemp(p);
+        // let gda = await accountService.getDataTemp(p);
+        let gda = await accountService.getDataAccount(p);
+
         console.log("get Data Employe =>", gda.responseCode);
         if(gda.responseCode == process.env.SUCCESS_RESPONSE){
           data.profile.employee_id = gda.data[0].employee_id;
@@ -615,7 +649,8 @@ module.exports.assignOrderPost = async function assignOrderPost(req, res, next) 
         // data.serviceName=service;
         data.status='Assign';
         let profile = await isValid.getData();
-        var gas = await accountService.getData(profile);
+        // var gas = await accountService.getData(profile);
+        var gas = await accountService.getDataAccount(profile);
         if(gas.responseCode == process.env.SUCCESS_RESPONSE) {
           profile.id = gas.data[0].employee_id
         }
@@ -718,7 +753,8 @@ module.exports.assignOrderUpdate = async function assignOrderUpdate(req, res, ne
       // call signature validator
       if (await isValid.checkSignature() && await isValid.checkToken()) {
         let profile = await isValid.getData();
-        var gas = await accountService.getData(profile);
+        // var gas = await accountService.getData(profile);
+        var gas = await accountService.getDataAccount(profile);
         if(gas.responseCode == process.env.SUCCESS_RESPONSE) {
           profile.id = gas.data[0].employee_id
         }
@@ -766,7 +802,7 @@ module.exports.getOrder = async function getOrder(req, res, next) {
 
 
   isValid = new validator(signature, token);
-
+  console.log('param =>',param)
   switch (version) {
     case 2:
       break;
