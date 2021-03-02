@@ -1108,8 +1108,6 @@ exports.assignOrderPost = function (data) {
           ds.status = data.status;
           ds.orderCode = na.orderCode;
           ds.secretKey = na.secretKey;
-          var uu = await updateUltisend(ds)
-          console.log('updateUltisend =>', uu)
         }
 
         // await mongoose.connection.close();
