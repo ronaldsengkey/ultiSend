@@ -7,11 +7,12 @@ const asym = require('../config/asymmetric');
 
 class Validator {
     constructor(signature, token, authorization) {
-        console.log("new validator::", signature, token);
+        console.log("new validator a =>", {'signature =>': signature, 'token =>': token});
         this.signature = signature;
         this.token = token;
         this.appId = false;
         this.authorization = authorization;
+        console.log("new validator b =>", {'this.signature =>': this.signature, 'this.token =>': this.token});
     }
     async checkToken() {
         // console.log("This is token validator " + this.token);
@@ -26,7 +27,7 @@ class Validator {
                 'Authorization': this.authorization,
             }
         }
-        console.log("options::", options);
+        console.log("checkToken options::", options);
         let result = await sentRequest(options);
         if (result.responseCode == process.env.SUCCESS_RESPONSE) {
             return true;
@@ -45,7 +46,7 @@ class Validator {
             "method": "POST",
             "url": svUrl
         }
-        console.log("options::", options);
+        console.log("checkSignature options::", options);
         let result = await sentRequest(options);
         console.log("result::", result);
         if (result.responseCode == process.env.SUCCESS_RESPONSE) {
