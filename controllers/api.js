@@ -17,7 +17,6 @@ const driverDivisionId = '9'; //division id driver from postgreq
 // validator for signature and token
 
 module.exports.accountPost = async function accountPost(req, res, next) {
-  console.log('accountPost')
   try {
     var signature = req.swagger.params["signature"].value;
     var version = req.swagger.params["v"].value;
@@ -37,6 +36,7 @@ module.exports.accountPost = async function accountPost(req, res, next) {
       id_number: req.swagger.params["id_number"].value,
       vehicleInfo: req.swagger.params["vehicleInfo"].value
     }
+    console.log('accountPost param =>', {'token =>' : token, 'signature =>' : signature})
 
     isValid = new validator(signature, token);
 
@@ -194,6 +194,7 @@ module.exports.accountGet = async function accountGet(req, res){
   let body = {};
   // var data = req.swagger.params["body"].value;
   console.log("category::", category);
+  console.log("flowEntry::", flowEntry);
   isValid = new validator(signature, token, authorization);
   if (await isValid.checkSignature() && await isValid.checkToken()) {
     let data = await isValid.getData();
