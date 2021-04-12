@@ -603,86 +603,93 @@ exports.postOrder = function (data) {
     };
     let res = {};
     try {
-      //getCity
-      var merchantDistrict='',receiverDistrict='';
-      if(data.merchantLat){
-        if(data.merchantLong){
-          var latlng = data.merchantLat+', '+data.merchantLong;
-          var gc = await getCity({latlng: latlng})
-          if(gc.responseCode=process.env.SUCCESS_RESPONSE){
-            merchantDistrict=gc.data;
+      var ceo  = await checkExistOrder(data.orderCode);
+        console.log('checkExistOrder =>',ceo)
+        if(ceo.responseCode == process.env.NOTFOUND_RESPONSE) {
+        //getCity
+        var merchantDistrict='',receiverDistrict='';
+        if(data.merchantLat){
+          if(data.merchantLong){
+            var latlng = data.merchantLat+', '+data.merchantLong;
+            var gc = await getCity({latlng: latlng})
+            if(gc.responseCode=process.env.SUCCESS_RESPONSE){
+              merchantDistrict=gc.data;
+            }
           }
         }
-      }
-      if(data.receiverLat){
-        if(data.receiverLong){
-          var latlng = data.receiverLat+', '+data.receiverLong;
-          var gc = await getCity({latlng: latlng})
-          console.log('receiverLong =>',gc)
-          if(gc.responseCode=process.env.SUCCESS_RESPONSE){
-            receiverDistrict=gc.data;
+        if(data.receiverLat){
+          if(data.receiverLong){
+            var latlng = data.receiverLat+', '+data.receiverLong;
+            var gc = await getCity({latlng: latlng})
+            console.log('receiverLong =>',gc)
+            if(gc.responseCode=process.env.SUCCESS_RESPONSE){
+              receiverDistrict=gc.data;
+            }
           }
+        }        
+        var orderReff = await getOrderReff();
+        console.log('orderReff =>', orderReff)
+        await mongoose.connect(mongoConf.mongoDb.url, {
+          useNewUrlParser: true
+        });
+        let newApi = new orderSchema({
+          serviceName: data.serviceName,
+          pickupTime: data.pickupTime,
+          pickupDate: data.pickupDate,
+          orderCode: data.orderCode,
+          orderReff: orderReff,
+          merchantId: data.merchantId,
+          merchantName: data.merchantName,
+          merchantAddress: data.merchantAddress,
+          merchantPhone: data.merchantPhone,
+          merchantLat: data.merchantLat,
+          merchantLong: data.merchantLong,
+          merchantDistrict: merchantDistrict,
+          receiverName: data.receiverName,
+          receiverAddress: data.receiverAddress,
+          receiverPhone: data.receiverPhone,
+          receiverLat: data.receiverLat,
+          receiverLong: data.receiverLong,
+          receiverDistrict:receiverDistrict,
+          pickupTime: data.pickupTime,
+          status: data.status,
+          secretKey: data.secretKey,
+          orderItem: data.orderItem,
+          packageType: data.packageType,
+          paymentBy: 'Ultimeal',
+          note: data.note,
+          paymentMethod: data.paymentMethod,
+          total: data.total,
+          userCreated: data.userCreated,
+        });
+        let na = await newApi.save();
+        // let na = {};
+        await mongoose.connection.close();
+        if (na) {
+          res.responseCode = process.env.SUCCESS_RESPONSE;
+          res.responseMessage = "New order created";
+          var employee_id=0;
+          if(data.profile.employee_id){employee_id=data.profile.employee_id}
+          var activities = {
+            category: "Ultisend",
+            module: "Create Order",
+            description: "Create Order, data : (id) "+na._id + ", (receiverName) "+na.receiverName,
+            user_id: employee_id,
+            user_name: data.profile.email,
+            crud_id: 0
+          }
+          console.log('activities =>',activities)
+          dt.activities = activities;
+          log.addLog(dt);
+        } else {
+          res.responseCode = process.env.FAILED_RESPONSE;
+          res.responseMessage = "Failed create order";
         }
-      }
-
-      var orderReff = await getOrderReff();
-      console.log('orderReff =>', orderReff)
-      await mongoose.connect(mongoConf.mongoDb.url, {
-        useNewUrlParser: true
-      });
-      let newApi = new orderSchema({
-        serviceName: data.serviceName,
-        pickupTime: data.pickupTime,
-        pickupDate: data.pickupDate,
-        orderCode: data.orderCode,
-        orderReff: orderReff,
-        merchantId: data.merchantId,
-        merchantName: data.merchantName,
-        merchantAddress: data.merchantAddress,
-        merchantPhone: data.merchantPhone,
-        merchantLat: data.merchantLat,
-        merchantLong: data.merchantLong,
-        merchantDistrict: merchantDistrict,
-        receiverName: data.receiverName,
-        receiverAddress: data.receiverAddress,
-        receiverPhone: data.receiverPhone,
-        receiverLat: data.receiverLat,
-        receiverLong: data.receiverLong,
-        receiverDistrict:receiverDistrict,
-        pickupTime: data.pickupTime,
-        status: data.status,
-        secretKey: data.secretKey,
-        orderItem: data.orderItem,
-        packageType: data.packageType,
-        paymentBy: 'Ultimeal',
-        note: data.note,
-        paymentMethod: data.paymentMethod,
-        total: data.total,
-        userCreated: data.userCreated,
-      });
-      let na = await newApi.save();
-      // let na = {};
-      await mongoose.connection.close();
-      if (na) {
-        res.responseCode = process.env.SUCCESS_RESPONSE;
-        res.responseMessage = "New order created";
-        var employee_id=0;
-        if(data.profile.employee_id){employee_id=data.profile.employee_id}
-        var activities = {
-          category: "Ultisend",
-          module: "Create Order",
-          description: "Create Order, data : (id) "+na._id + ", (receiverName) "+na.receiverName,
-          user_id: employee_id,
-          user_name: data.profile.email,
-          crud_id: 0
-        }
-        console.log('activities =>',activities)
-        dt.activities = activities;
-        log.addLog(dt);
-      } else {
+      }else{
         res.responseCode = process.env.FAILED_RESPONSE;
         res.responseMessage = "Failed create order";
       }
+      
       resolve(res);
 
     } catch (err) {
@@ -928,75 +935,7 @@ exports.assignOrderUpdate = function (data) {
         } else {
           res.responseCode = process.env.FAILED_RESPONSE;
           res.responseMessage = "Failed, update assign order";
-        }
-        // await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
-        // // update order status
-        // let na = await orderSchema.findOneAndUpdate({"_id": data.orderId}, {
-        //   $set: {
-        //     status: data.status
-        //   }
-        // }, {
-        //   useFindAndModify: false
-        // });
-        // await mongoose.connection.close();
-        // console.log('nanananananana=>',na)
-        // if(data.status == 'delivered'){
-        //   // update driver status
-        //   await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
-        //   await driverSchema.findOneAndUpdate({"driverId": data.driverId}, {
-        //     $set: {
-        //       driverStatus: 'off'
-        //     }
-        //   }, {
-        //     useFindAndModify: false
-        //   });
-        //   await mongoose.connection.close();
-        // }
-
-        // if (na) {
-        //   await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
-        //   let query = await driverSchema.find({"driverId": data.driverId});
-        //   await mongoose.connection.close();
-        //   console.log('driverSchema 1 =>',query)
-        //   console.log('driverSchema lenght =>',query.length)
-        //   if(query.length >0){
-        //     var ds = {};
-        //     var tmp = query[0];
-        //     ds.courierPhoto = query[0].driverImage;
-        //     ds.courierName = query[0].driverName;
-        //     ds.courierPhoneNumber = query[0].driverPhone;
-        //     ds.courierVehicleInfo = query[0].driverVehicleInfo;
-        //     ds.status = data.status;
-        //     ds.orderCode = na.orderCode;
-        //     ds.secretKey=na.secretKey;
-        //     var uu = await updateUltisend(ds)
-        //     console.log('updateUltisend =>',uu)  
-
-        //     // insert log
-        //     let newApi = new orderLogSchema({
-        //       orderId: data.orderId,
-        //       // driverId: data.driverId, // error, change objId
-        //       // driverId: query[0]._id,
-        //       driverId: tmp._id,
-        //       responseNotes: data.responseNotes,
-        //       status: data.status,
-        //       userCreated: data.userCreated,
-        //     });
-        //     await mongoose.connect(mongoConf.mongoDb.url, {useNewUrlParser: true});
-        //     await newApi.save();
-        //     await mongoose.connection.close();
-        //   }else{
-        //     console.log('driver not found')
-        //   }
-
-        //   res.responseCode = process.env.SUCCESS_RESPONSE;
-        //   res.responseMessage = "Success,update assign order"
-        // } else {
-        //   res.responseCode = process.env.FAILED_RESPONSE;
-        //   res.responseMessage = "Failed assign order";
-        // }
-        // await mongoose.connection.close();
-
+        }      
       }
       console.log("res::", res);
       resolve(res);
@@ -1271,12 +1210,6 @@ async function getOrderReff() {
   }).sort({
     createdDate: -1
   });
-
-  // let query = await orderSchema.aggregate([
-  //   {$project: {day: {$dayOfMonth: '$createdDate'}, month: {$month: '$createdDate'}, year: {$year: '$createdDate'} }},
-  //   {$match: {day: day, month: today.getMonth()+1, year: today.getFullYear()} },
-  //   {$group: { _id: null, count: { $sum: 1 } }}
-  // ]);
 
   if (query.length > 0) {
     var id = parseInt(query[0].orderReff.substr(14, 4)) + 1;
@@ -1775,4 +1708,19 @@ function geoCode(data) {
       });
     }
   })
+}
+async function checkExistOrder(data) {
+  var res = {};
+  await mongoose.connect(mongoConf.mongoDb.url, {
+    useNewUrlParser: true
+  });
+
+  var query = await orderSchema.find({'orderCode': data});
+  if (query.length > 0) {
+    res.responseCode = process.env.SUCCESS_RESPONSE
+  } else {
+    res.responseCode = process.env.NOTFOUND_RESPONSE
+  }
+  await mongoose.connection.close();
+  return res;
 }
