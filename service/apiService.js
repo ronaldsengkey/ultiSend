@@ -133,7 +133,7 @@ exports.getOrder = function (data) {
       await mongoose.connect(mongoConf.mongoDb.url, {
         useNewUrlParser: true
       });
-      let query = await orderSchema.find(param).populate('assignId');
+      let query = await orderSchema.find(param).sort({'createdDate': -1}).populate('assignId');
       // console.log("query =>", query[0]);
       await mongoose.connection.close();
       if (query.length > 0) {
