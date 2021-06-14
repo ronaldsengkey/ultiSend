@@ -1293,9 +1293,12 @@ function getEmployee(data) {
 async function updateUltisend(data) {
   return new Promise(async function (resolve, reject) {
     try {
+      console.log('updateUltisend data=>',data)
       // let buff = new Buffer(data.secretKey, 'base64');
       let buff = Buffer.from(data.secretKey, 'base64')        
+      console.log('updateUltisend buff=>',buff)
       let text = buff.toString('ascii');
+      console.log('updateUltisend text=>',text)
       var arr_text = text.split(":");
       var orderId = arr_text[0]
 
@@ -1316,6 +1319,7 @@ async function updateUltisend(data) {
       };
       console.log('updateUltisend options =>', options)
       request(options, function (error, response) {
+        console.log('response =>', response);
         if (error) throw new Error(error);
         console.log('response.body =>', JSON.parse(response.body));
         resolve(JSON.parse(response.body));
