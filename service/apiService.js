@@ -860,8 +860,8 @@ exports.assignOrderUpdate = function (data) {
             ds.orderCode = na[0].orderCode;
             ds.secretKey = na[0].secretKey;
             var uu = await updateUltisend(ds)
+            console.log('updateUltisend ress =>', uu.responseCode)
             if (uu.responseCode == process.env.SUCCESS_RESPONSE) {
-              console.log('updateUltisend ress =>', uu.responseCode)
               //update order 
               await mongoose.connect(mongoConf.mongoDb.url, {
                 useNewUrlParser: true
