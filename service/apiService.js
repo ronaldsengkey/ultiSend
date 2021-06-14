@@ -1293,7 +1293,8 @@ function getEmployee(data) {
 async function updateUltisend(data) {
   return new Promise(async function (resolve, reject) {
     try {
-      let buff = new Buffer(data.secretKey, 'base64');
+      // let buff = new Buffer(data.secretKey, 'base64');
+      let buff = Buffer.from(data.secretKey, 'base64')        
       let text = buff.toString('ascii');
       var arr_text = text.split(":");
       var orderId = arr_text[0]
