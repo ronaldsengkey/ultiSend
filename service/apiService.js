@@ -1319,7 +1319,7 @@ async function updateUltisend(data) {
       };
       console.log('updateUltisend options =>', options)
       request(options, function (error, response) {
-        console.log('response =>', JSON.parse(response));
+        console.log('response =>', response);
         if (error) throw new Error(error);
         console.log('response.body =>', JSON.parse(response.body));
         resolve(JSON.parse(response.body));
